@@ -1,13 +1,14 @@
 '''
-Author:     Shubham
+Original author: Shubham
 LinkedIn:   https://www.linkedin.com/in/shubham-sunil-kumar-333547133/
 
 License:    GNU Affero General Public License
             https://www.gnu.org/licenses/agpl-3.0.en.html
 
-GitHub:     https://github.com/theturkishangorashiro-art/apply-and-pray
+Project:    https://github.com/saif-siddiqui06/Apply-and-Pray
+Modified and maintained by: Saif Siddiqui (https://github.com/saif-siddiqui06), 2026
+Credits:    see CREDITS.md
 
-Support me: https://github.com/sponsors/theturkishangorashiro-art
 '''
 
 from config.settings import click_gap, smooth_scroll

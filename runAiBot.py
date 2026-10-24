@@ -1,13 +1,14 @@
 '''
-Author:     Shubham
+Original author: Shubham
 LinkedIn:   https://www.linkedin.com/in/shubham-sunil-kumar-333547133/
 
 License:    GNU Affero General Public License
             https://www.gnu.org/licenses/agpl-3.0.en.html
 
-GitHub:     https://github.com/theturkishangorashiro-art/apply-and-pray
+Project:    https://github.com/saif-siddiqui06/Apply-and-Pray
+Modified and maintained by: Saif Siddiqui (https://github.com/saif-siddiqui06), 2026
+Credits:    see CREDITS.md
 
-Support me: https://github.com/sponsors/theturkishangorashiro-art
 '''
 
 
@@ -1803,7 +1804,6 @@ def confirm_normal_submit(job: str) -> bool:
     return True
 
 def main() -> None:
-    pyautogui.alert("Please consider sponsoring this project at:\n\nhttps://github.com/sponsors/theturkishangorashiro-art\n\n", "Support the project", "Okay")
     total_runs = 1
     try:
         global linkedIn_tab, tabs_count, useNewResume, aiClient, default_resume_path, normal_applier, ai_profile_text
@@ -1950,8 +1950,8 @@ def main() -> None:
         timeSavedMsg = ""
         if timeSaved > 0:
             timeSaved += 60
-            timeSavedMsg = f"In this run, you saved approx {round(timeSaved/60)} mins ({timeSaved} secs), please consider supporting the project."
-        msg = f"{quotes}\n\n\n{timeSavedMsg}\nYou can also get your quote and name shown here, or prioritize your bug reports by supporting the project at:\n\nhttps://github.com/sponsors/theturkishangorashiro-art\n\n\nSummary:\n{summary}\n\n\nBest regards,\nShubham\nhttps://www.linkedin.com/in/shubham-sunil-kumar-333547133/\n\nTop Sponsors:\n{sponsors}"
+            timeSavedMsg = f"In this run, you saved approx {round(timeSaved/60)} mins ({timeSaved} secs), if it helped, star the project on GitHub."
+        msg = f"{quotes}\n\n\n{timeSavedMsg}\nProject, help and bug reports: https://github.com/saif-siddiqui06/Apply-and-Pray\n\n\nSummary:\n{summary}\n\n\nBest regards,\nShubham\nhttps://www.linkedin.com/in/shubham-sunil-kumar-333547133/\n\nTop Sponsors:\n{sponsors}"
         print_lg("\n" + "#" * 60 + "\n" + summary + "#" * 60)   # Once in the log; the popup below shows the same summary
         pyautogui.alert(msg, "Exiting..")
         print_lg("Closing the browser...")

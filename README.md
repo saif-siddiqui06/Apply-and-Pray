@@ -316,14 +316,11 @@ Use at your own risk.
 
 ---
 
-## 👤 Author
+## 👤 Maintainer & credits
 
-**Shubham**  
-LinkedIn: https://www.linkedin.com/in/shubham-sunil-kumar-333547133/
+**Saif Siddiqui** maintains this version: [github.com/saif-siddiqui06/Apply-and-Pray](https://github.com/saif-siddiqui06/Apply-and-Pray). Bugs and ideas: [open an issue](https://github.com/saif-siddiqui06/Apply-and-Pray/issues).
 
-GitHub: https://github.com/theturkishangorashiro-art/apply-and-pray
-
-Support me: https://github.com/sponsors/theturkishangorashiro-art
+Apply & Pray builds on the open-source LinkedIn job applier by **Shubham** ([LinkedIn](https://www.linkedin.com/in/shubham-sunil-kumar-333547133/)) and its contributors. See [CREDITS.md](CREDITS.md) for everyone whose work is in it. Licensed under AGPL-3.0, like the original.
 
 ---
 

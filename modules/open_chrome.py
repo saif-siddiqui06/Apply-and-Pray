@@ -1,13 +1,14 @@
 '''
-Author:     Shubham
+Original author: Shubham
 LinkedIn:   https://www.linkedin.com/in/shubham-sunil-kumar-333547133/
 
 License:    GNU Affero General Public License
             https://www.gnu.org/licenses/agpl-3.0.en.html
 
-GitHub:     https://github.com/theturkishangorashiro-art/apply-and-pray
+Project:    https://github.com/saif-siddiqui06/Apply-and-Pray
+Modified and maintained by: Saif Siddiqui (https://github.com/saif-siddiqui06), 2026
+Credits:    see CREDITS.md
 
-Support me: https://github.com/sponsors/theturkishangorashiro-art
 '''
 
 from modules.helpers import get_default_temp_profile, make_directories
@@ -127,7 +128,7 @@ except SessionNotCreatedException as e:
     critical_error_log("Failed to create Chrome Session, retrying with guest profile", e)
     options, driver, actions, wait = createChromeSession(True)
 except Exception as e:
-    msg = 'Seems like Google Chrome is out dated. Update browser and try again! \n\n\nIf issue persists, try Safe Mode. Set, safe_mode = True in config.py \n\nPlease check GitHub discussions/support for solutions https://github.com/theturkishangorashiro-art/apply-and-pray \n                                   OR \nReach out through the GitHub repository support channels.'
+    msg = 'Seems like Google Chrome is out dated. Update browser and try again! \n\n\nIf issue persists, try Safe Mode. Set, safe_mode = True in config.py \n\nPlease check GitHub discussions/support for solutions https://github.com/saif-siddiqui06/Apply-and-Pray/issues \n                                   OR \nReach out through the GitHub repository support channels.'
     if isinstance(e,TimeoutError): msg = "Couldn't download Chrome-driver. Set stealth_mode = False in config!"
     if is_network_error(e): msg = "No internet connection: ChromeDriver (the part that lets the bot control Chrome) couldn't be downloaded.\n\nCheck your Wi-Fi / internet and run the bot again. Chrome itself is fine, you don't need to update it.\n\n(ChromeDriver is downloaded once per Chrome version, then reused.)"
     print_lg(msg)

@@ -1,13 +1,14 @@
 '''
-Author:     Shubham
+Original author: Shubham
 LinkedIn:   https://www.linkedin.com/in/shubham-sunil-kumar-333547133/
 
 License:    GNU Affero General Public License
             https://www.gnu.org/licenses/agpl-3.0.en.html
 
-GitHub:     https://github.com/theturkishangorashiro-art/apply-and-pray
+Project:    https://github.com/saif-siddiqui06/Apply-and-Pray
+Modified and maintained by: Saif Siddiqui (https://github.com/saif-siddiqui06), 2026
+Credits:    see CREDITS.md
 
-Support me: https://github.com/sponsors/theturkishangorashiro-art
 '''
 
 from personals import *
@@ -66,17 +67,9 @@ YOU DON'T HAVE TO EDIT THIS FILE, IF YOU ADDED YOUR DEFAULT RESUME.
 
 ############################################################################################################
 '''
-THANK YOU for using my tool 😊! Wishing you the best in your job hunt 🙌🏻!
+Thank you for using Apply & Pray! Wishing you the best in your job hunt.
 
-Sharing is caring! If you found this tool helpful, please share it with your peers 🥺. Your support keeps this project alive.
-
-Support my work on <PATREON_LINK>. Together, we can help more job seekers.
-
-As an independent developer, I pour my heart and soul into creating tools like this, driven by the genuine desire to make a positive impact.
-
-Your support, whether through donations big or small or simply spreading the word, means the world to me and helps keep this project alive and thriving.
-
-Gratefully yours 🙏🏻,
-Shubham
+Project: https://github.com/saif-siddiqui06/Apply-and-Pray
+It builds on the open-source work of Shubham and other contributors: see CREDITS.md.
 '''
 ############################################################################################################

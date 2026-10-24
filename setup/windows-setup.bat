@@ -1,4 +1,4 @@
-:: Author:     Shubham
+:: Original author: Shubham
 :: LinkedIn:   https://www.linkedin.com/in/shubham-sunil-kumar-333547133/
 
 :: Copyright (C) 2024 Shubham
@@ -6,9 +6,8 @@
 :: License:    GNU Affero General Public License
 ::             https://www.gnu.org/licenses/agpl-3.0.en.html
 
-:: GitHub:     https://github.com/theturkishangorashiro-art/apply-and-pray
+:: Project:    https://github.com/saif-siddiqui06/Apply-and-Pray  (maintained by Saif Siddiqui; credits: CREDITS.md)
 
-Support me: https://github.com/sponsors/theturkishangorashiro-art
 
 
 

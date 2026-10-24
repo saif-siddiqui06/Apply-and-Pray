@@ -146,3 +146,6 @@ tr.your-turn td { background: var(--ok-bg); }
 .counter.over { color: var(--danger); font-weight: 600; }
 .draft textarea.note { min-height: 90px; }
 .action-tag.bad { background: var(--danger-bg); color: var(--danger); }
+
+.app-footer { max-width: 1040px; margin: 8px auto 32px; padding: 0 24px; font-size: 13px; color: var(--muted); text-align: center; }
+.app-footer a { color: var(--muted); }
