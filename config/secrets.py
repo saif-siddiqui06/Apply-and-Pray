@@ -79,6 +79,8 @@ Set `stream_output = True` if you want to stream AI output or `stream_output = F
 # Used when ai_provider = "gemini". Get a free key at https://aistudio.google.com/app/apikey and paste it between the quotes.
 # Gemini writes answers to new questions (Eg: "Why do you want this job?") from your details and your resume.
 gemini_api_key = ""
+# More Gemini keys (Eg: from other Google accounts), separated by commas. When one key's free daily quota is used up, the next one is used.
+gemini_backup_keys = ""
 gemini_model = "gemini-3.8-flash"     # Eg: "gemini-3.8-flash" (fast, free tier). Google retired "gemini-2.5-flash" for new users
 
 

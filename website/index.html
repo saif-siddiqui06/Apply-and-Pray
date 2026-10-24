@@ -27,7 +27,7 @@
   <main>
     <div class="hero">
       <div class="wrap">
-        <span class="tag">Free · Open source · Runs on your PC</span>
+        <span class="tag">Free · Open source · Runs on your PC · Made by Saif Siddiqui</span>
         <h1>Your job hunt,<br><span class="grad">on autopilot</span> (with you in charge)</h1>
         <p class="lead">Apply &amp; Pray applies to jobs for you, finds openings that are only posted in the feed, and helps you reach the people who hire, while you approve every message it sends.</p>
         <div class="actions">
@@ -94,22 +94,58 @@
     <section id="download" class="alt">
       <div class="wrap">
         <div class="section-title">
-          <h2>Download</h2>
-          <p>Free for everyone. The download page always has the newest version.</p>
+          <h2>Download &amp; start in 10 minutes</h2>
+          <p>Free for everyone. You need a Windows 10 / 11 PC and Google Chrome.</p>
         </div>
+
         <div class="grid">
           <div class="card">
-            <div class="icon">🪟</div><h3>Windows app</h3>
-            <p style="margin-bottom:14px">Download <b>ApplyAndPray-windows.zip</b> (or the installer), unzip it and open <b>ApplyAndPray.exe</b>. Needs Google Chrome.</p>
-            <a class="btn primary" id="download-link" href="https://github.com/saif-siddiqui06/Apply-and-Pray/releases/latest">⬇ Go to the download page</a>
+            <div class="icon">🪟</div><h3>1. The app (Windows)</h3>
+            <p style="margin-bottom:14px"><b>ApplyAndPray-windows.zip</b>, about 45 MB. Everything inside, no Python needed.</p>
+            <a class="btn primary" id="download-link" href="https://github.com/saif-siddiqui06/Apply-and-Pray/releases/latest/download/ApplyAndPray-windows.zip">⬇ Download for Windows</a>
           </div>
           <div class="card">
-            <div class="icon">🐍</div><h3>From source (any OS)</h3>
-            <p style="margin-bottom:14px">For people comfortable with Python 3.11: get the code, install the requirements, then run <code>python apply_and_pray.py</code>.</p>
-            <a class="btn" id="source-link" href="https://github.com/saif-siddiqui06/Apply-and-Pray">View the code</a>
+            <div class="icon">🌐</div><h3>2. Google Chrome</h3>
+            <p style="margin-bottom:14px">The app works in its own Chrome window. Install it, or update it if you already have it.</p>
+            <a class="btn" href="https://www.google.com/chrome/" rel="noopener">Get Chrome</a>
+          </div>
+          <div class="card">
+            <div class="icon">✨</div><h3>3. A free AI key (optional)</h3>
+            <p style="margin-bottom:14px">Lets the app answer new questions from your resume. Free from Google, takes 1 minute.</p>
+            <a class="btn" href="https://aistudio.google.com/app/apikey" rel="noopener">Get a Gemini key</a>
           </div>
         </div>
-        <p class="fine" style="text-align:center;color:var(--muted);font-size:14px;margin-top:18px">Windows may say “Windows protected your PC” because the app isn't signed yet: click <b>More info → Run anyway</b>. <a href="guides.html#smartscreen">Why?</a></p>
+
+        <div class="card" style="margin-top:16px">
+          <h3 style="margin-bottom:10px">Quick start</h3>
+          <ol style="margin:0;padding-left:22px;color:var(--muted)">
+            <li><b>Unzip</b> the download: right-click it → <b>Extract All</b> → choose a folder (Eg: Documents). Keep all its files together.</li>
+            <li>Open the folder and double-click <b>ApplyAndPray.exe</b>. If Windows says “Windows protected your PC”, click <b>More info → Run anyway</b> (<a href="guides.html#smartscreen">why</a>).</li>
+            <li>Your dashboard opens in the browser. In <b>Setup</b>, fill <b>Your basics</b> and upload your resume (PDF).</li>
+            <li><b>LinkedIn login</b>: click <b>Open LinkedIn</b> and log in once in the window that opens. The app never sees your password.</li>
+            <li><b>AI assistant</b>: paste your Gemini key and click <b>Save and test</b>. Add keys from other Google accounts as backups for long runs.</li>
+            <li>Go to <b>Run</b>, pick <b>Easy Apply</b>, tick <b>Test run</b> the first time (it fills forms but sends nothing), and click <b>Start</b>.</li>
+          </ol>
+          <p style="margin:12px 0 0;color:var(--muted)">Every step has a detailed guide: <a href="guides.html">read the setup guides</a>.</p>
+        </div>
+
+        <div class="grid" style="margin-top:16px">
+          <div class="card">
+            <div class="icon">📖</div><h3>Setup guides</h3>
+            <p style="margin-bottom:14px">Step by step: LinkedIn login, AI key, Gmail app password, networking, troubleshooting.</p>
+            <a class="btn" href="guides.html">Open the guides</a>
+          </div>
+          <div class="card">
+            <div class="icon">🐍</div><h3>Source code (Mac / Linux / developers)</h3>
+            <p style="margin-bottom:14px">Needs Python 3.11 and Chrome: unzip, <code>pip install -r requirements.txt</code>, then <code>python apply_and_pray.py</code>.</p>
+            <a class="btn" id="source-link" href="https://github.com/saif-siddiqui06/Apply-and-Pray/archive/refs/heads/main.zip">⬇ Download the code</a>
+          </div>
+          <div class="card">
+            <div class="icon">🗂️</div><h3>All versions</h3>
+            <p style="margin-bottom:14px">Older versions and what changed in each one.</p>
+            <a class="btn" href="https://github.com/saif-siddiqui06/Apply-and-Pray/releases">See all releases</a>
+          </div>
+        </div>
       </div>
     </section>
 

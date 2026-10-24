@@ -42,8 +42,8 @@
         <p class="why">About 2 minutes. You need Windows 10 or 11 and Google Chrome.</p>
         <ol>
           <li>Install or update <a href="https://www.google.com/chrome/" target="_blank" rel="noopener">Google Chrome</a> if you don't have it.</li>
-          <li>On the <a href="./#download">download page</a>, get <b>ApplyAndPray-windows.zip</b> (or <b>ApplyAndPray-Setup.exe</b> if it's offered).</li>
-          <li>Zip: right-click it → <b>Extract All</b>, choose a folder (Eg: Documents). Keep all the files together. Installer: just run it.</li>
+          <li>Download <a href="https://github.com/saif-siddiqui06/Apply-and-Pray/releases/latest/download/ApplyAndPray-windows.zip"><b>ApplyAndPray-windows.zip</b></a> (about 45 MB).</li>
+          <li>Right-click it → <b>Extract All</b>, choose a folder (Eg: Documents). Keep all the files together.</li>
           <li>Open <b>ApplyAndPray.exe</b>. A small black window opens (keep it open while you use the app) and your dashboard opens in your browser at <code>http://127.0.0.1:5000</code>.</li>
         </ol>
         <p>Closing the small window stops the app. Opening the app again while it runs just shows the dashboard.</p>
@@ -91,6 +91,8 @@
           <li>Open <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> and sign in with your Google account.</li>
           <li>Click <b>Create API key</b> and copy it.</li>
           <li>In <b>Setup → AI assistant</b>, choose Google Gemini, paste the key and click <b>Save and test</b>.</li>
+          <li><b>Backup keys (recommended for long runs)</b>: make another key the same way with a different Google account, and paste it in
+            <b>Backup Gemini keys</b> (several keys: separate them with commas). When one key's free daily limit is used up, the app switches to the next.</li>
         </ol>
         <p>The free plan has a daily limit. When a model's limit is used up, the app switches to another model, and when all are used up it continues without AI until the next day (questions it can't answer are asked in a popup, or the job is saved for you).</p>
         <p><b>Other options:</b> OpenAI (paid: key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>, model <code>gpt-4o-mini</code>),

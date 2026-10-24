@@ -65,7 +65,8 @@ STEPS = [
 <li>Click <b>Create API key</b>, then copy it.</li>
 <li>Paste it below and click <b>Save and test</b>.</li>
 </ol>
-<p>The free plan has a daily limit. When a model's limit is used up, the bot switches to another model by itself.</p>
+<p>The free plan has a daily limit. When a model's limit is used up, the bot switches to another model by itself. For long runs, add
+<b>backup keys</b> made with other Google accounts (each account has its own free limit): the bot moves to the next key when one runs out.</p>
 <p><b>OpenAI (paid)</b>: create a key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>
 and add credit under Settings → Billing. Model example: <code>gpt-4o-mini</code>.</p>
 <p><b>DeepSeek (paid, low cost)</b>: create a key at <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">platform.deepseek.com/api_keys</a>
@@ -78,6 +79,8 @@ or <code>http://localhost:1234/v1/</code> (LM Studio).</p>
             {"section": "secrets", "name": "ai_provider", "label": "AI provider", "type": "select", "required": True,
              "options": [["gemini", "Google Gemini (free)"], ["openai", "OpenAI"], ["deepseek", "DeepSeek"], ["local", "Local model (Ollama / LM Studio)"]]},
             {"section": "secrets", "name": "gemini_api_key", "label": "Gemini API key", "type": "password", "required": True, "show_if": ["ai_provider", ["gemini"]]},
+            {"section": "secrets", "name": "gemini_backup_keys", "label": "Backup Gemini keys (optional)", "type": "password", "show_if": ["ai_provider", ["gemini"]],
+             "help": "More keys, Eg: made with other Google accounts, separated by commas. When one key's free daily limit is used up, the bot switches to the next."},
             {"section": "secrets", "name": "gemini_model", "label": "Gemini model", "type": "text", "placeholder": "gemini-3.8-flash", "show_if": ["ai_provider", ["gemini"]],
              "help": "Leave as it is unless you know you need another one."},
             {"section": "secrets", "name": "llm_api_key", "label": "API key", "type": "password", "required": True, "show_if": ["ai_provider", ["openai", "deepseek"]]},

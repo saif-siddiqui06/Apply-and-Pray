@@ -28,12 +28,30 @@ _NOT_FOR_TEXT = ("embedding", "tts", "image", "live", "audio", "aqa", "robotics"
 
 
 class GeminiClient:
-    def __init__(self, api_key: str, model: str):
+    def __init__(self, api_key: str, model: str, backup_keys: list[str] | None = None):
         self.api_key = api_key
         self.model = model
+        self.first_model = model
+        self.backup_keys = list(backup_keys or [])   # Used one after the other when this key's daily free quota is used up
         self.send_thinking_config = True   # Turned off if this model rejects it
         self.quota_until = 0.0             # Daily free quota used up on every model: no requests before this time
         self.fallbacks: list[str] | None = None   # Other models your key can use, tried when a model's daily quota runs out
+
+
+def _backup_keys() -> list[str]:
+    '''Extra Gemini keys (`gemini_backup_keys`, separated by commas / spaces / new lines), Eg: from other Google accounts.'''
+    keys = re.split(r'[\s,;]+', (getattr(secrets, "gemini_backup_keys", "") or "").strip())
+    main = _settings()[0]
+    return [key for key in dict.fromkeys(keys) if key and key != main]
+
+
+def _switch_key(client: GeminiClient) -> bool:
+    '''This key's daily free quota is used up on every model: moves `client` to the next backup key. False when none is left.'''
+    if not client.backup_keys: return False
+    client.api_key = client.backup_keys.pop(0)
+    client.model, client.fallbacks, client.send_thinking_config = client.first_model, None, True
+    print_lg(f"Gemini's free quota is used up on this key, switching to a backup key ({len(client.backup_keys)} more left).")
+    return True
 
 
 def _settings() -> tuple[str, str]:
@@ -68,7 +86,7 @@ def gemini_completion(client: GeminiClient, prompt: str, is_json: bool = False, 
             if response.status_code == 429:
                 wait = _retry_seconds(response, data)
                 if wait > 90:   # The daily quota, not the per-minute limit: waiting doesn't help, another model has its own quota
-                    if _switch_model(client): continue
+                    if _switch_model(client) or _switch_key(client): continue
                     client.quota_until = time.time() + wait
                     print_lg(f"Gemini's daily free quota is used up on every model, AI is off for {wait / 3600:.1f} hours. Questions it would answer are asked in a popup or left for you.")
                     return {"error": data.get("error", {}).get("message", "Gemini quota exceeded").splitlines()[0], "status": 429}
@@ -173,8 +191,8 @@ def gemini_create_client() -> GeminiClient | None:
     if not key or "YOUR_API_KEY" in key or key.startswith("sk-"):
         print_lg("Gemini API key is missing: put it in `gemini_api_key` in config/secrets.py (get one at https://aistudio.google.com/app/apikey). Continuing without AI.")
         return None
-    client = GeminiClient(key, model)
-    print_lg(f"Checking Gemini ({model})...")
+    client = GeminiClient(key, model, _backup_keys())
+    print_lg(f"Checking Gemini ({model})" + (f", with {len(client.backup_keys)} backup key(s)" if client.backup_keys else "") + "...")
     answer = gemini_completion(client, "Reply with the single word OK.", max_tokens=256, temperature=0)
     if isinstance(answer, dict) and _model_gone(answer):
         print_lg(f"Gemini model {model} can't be used: {str(answer.get('error'))[:200]}")
