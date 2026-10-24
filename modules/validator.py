@@ -32,6 +32,16 @@ def check_string(var: str, var_name: str, options: list=[], min_length: int=0) -
     if len(options) > 0 and var not in options: raise ValueError(f'Invalid input for {var_name}. Expecting a value from {options}, not {var}!')
     return True
 
+def check_delay(var, var_name: str) -> bool | TypeError | ValueError:
+    '''A delay: (min, max) numbers 0 or more with min <= max, or one number.'''
+    example = f'Example: `{var_name} = (5, 10)` waits a random time between 5 and 10, `{var_name} = (0, 0)` does not wait.'
+    values = list(var) if isinstance(var, (list, tuple)) else [var]
+    if len(values) not in (1, 2) or not all(isinstance(value, (int, float)) and not isinstance(value, bool) for value in values):
+        raise TypeError(f'The variable "{var_name}" in "{__validation_file_path}" must be two numbers in brackets (min, max)! Received "{var}" instead.\n\n{example}\n\nNOTE: Do NOT put the numbers in quotes!')
+    if min(values) < 0 or values[0] > values[-1]:
+        raise ValueError(f'The variable "{var_name}" in "{__validation_file_path}" must be (min, max) with numbers 0 or more and min not bigger than max! Received "{var}" instead.\n\n{example}')
+    return True
+
 def check_list(var: list, var_name: str, options: list=[], min_length: int=0) -> bool | TypeError | ValueError:
     if not isinstance(var, list): 
         raise TypeError(f'Invalid input for {var_name}. Expecting a List!')
@@ -56,6 +66,7 @@ def validate_personals() -> None | ValueError | TypeError:
     check_string(last_name, "last_name", min_length=1)
 
     check_string(phone_number, "phone_number", min_length=10)
+    check_string(email, "email")
 
     check_string(current_city, "current_city")
     
@@ -111,6 +122,11 @@ def validate_search() -> None | ValueError | TypeError:
     check_string(search_location, "search_location")
     check_int(switch_number, "switch_number", 1)
     check_boolean(randomize_search_order, "randomize_search_order")
+    check_int(stop_after_pages_without_new_jobs, "stop_after_pages_without_new_jobs", 0)
+    check_list(skip_title_words, "skip_title_words")
+    check_int(avoid_same_company_days, "avoid_same_company_days", 0)
+    check_int(max_applications_per_company, "max_applications_per_company", 1)
+    check_boolean(retry_failed_jobs, "retry_failed_jobs")
 
     check_string(sort_by, "sort_by", ["", "Most recent", "Most relevant"])
     check_string(date_posted, "date_posted", ["", "Any time", "Past month", "Past week", "Past 24 hours"])
@@ -134,7 +150,6 @@ def validate_search() -> None | ValueError | TypeError:
     check_boolean(in_your_network, "in_your_network")
     check_boolean(fair_chance_employer, "fair_chance_employer")
 
-    check_boolean(pause_after_filters, "pause_after_filters")
 
     check_list(about_company_bad_words, "about_company_bad_words")
     check_list(about_company_good_words, "about_company_good_words")
@@ -164,7 +179,7 @@ def validate_secrets() -> None | ValueError | TypeError:
     check_boolean(stream_output, "stream_output")
     
     # Validate DeepSeek configuration
-    check_string(ai_provider, "ai_provider", ["openai", "deepseek"])
+    check_string(ai_provider, "ai_provider", ["openai", "deepseek", "gemini"])
 
     if ai_provider == "deepseek":
         check_string(llm_model, "deepseek_model", ["deepseek-chat", "deepseek-reasoner"])
@@ -206,6 +221,23 @@ def validate_settings() -> None | ValueError | TypeError:
     check_boolean(smooth_scroll, "smooth_scroll")
     check_boolean(keep_screen_awake, "keep_screen_awake")
     check_boolean(stealth_mode, "stealth_mode")
+
+    check_string(apply_mode, "apply_mode", ["easy", "normal", "both", "ask"])
+    check_list(normal_apply_sites, "normal_apply_sites", ["greenhouse", "lever", "ashby", "googleforms", "other"])
+    check_boolean(ask_instead_of_guessing, "ask_instead_of_guessing")
+    check_string(saved_answers_file, "saved_answers_file", min_length=1)
+    check_int(max_fill_attempts, "max_fill_attempts", 1)
+    check_int(popup_timeout_minutes, "popup_timeout_minutes", 0)
+    check_boolean(show_control_panel, "show_control_panel")
+    check_boolean(ai_skill_extraction, "ai_skill_extraction")
+    check_boolean(review_ai_answers, "review_ai_answers")
+    for name in ("delay_after_application", "delay_after_skipped_job", "delay_before_opening_job", "delay_between_form_pages",
+                 "delay_before_submit", "delay_between_result_pages", "delay_between_searches", "break_minutes"):
+        check_delay(globals()[name], name)
+    check_int(break_every_applications, "break_every_applications", 0)
+    check_int(max_applications_per_hour, "max_applications_per_hour", 0)
+    check_int(max_applications_per_day, "max_applications_per_day", 0)
+    check_boolean(open_apply_by_hand_page, "open_apply_by_hand_page")
 
 
 

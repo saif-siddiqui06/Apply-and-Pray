@@ -1,16 +1,18 @@
 
 
+# DEFAULTS ONLY. Your details go in the dashboard (user_data/settings.json), never in this file: it is shared in git.
+# Passwords and API keys are stored in Windows Credential Manager by the dashboard, not here.
 ###################################################### CONFIGURE YOUR TOOLS HERE ######################################################
 
 
 # Login Credentials for LinkedIn (Optional)
-username = "shubhamsunilkumar@aaa.com"       # Enter your username in the quotes
-password = "1234566773"           # Enter your password in the quotes
+username = "username@example.com"       # Enter your username in the quotes
+password = "example_password"           # Enter your password in the quotes
 
 
 ## Artificial Intelligence (Beta Not-Recommended)
 # Use AI
-use_AI = False                          # True or False, Note: True or False are case-sensitive
+use_AI = True                          # True or False, Note: True or False are case-sensitive
 '''
 Note: Set it as True only if you want to use AI, and If you either have a
 1. Local LLM model running on your local machine, with it's APIs exposed. Example softwares to achieve it are:
@@ -25,7 +27,7 @@ CHECK THE OPENAI API PIRCES AT THEIR WEBSITE (https://openai.com/api/pricing/).
 ##> ------ Yang Li : MARKYangL - Feature ------
 ##> ------ Tim L : tulxoro - Refactor ------
 # Select AI Provider
-ai_provider = "openai"               # "openai", "deepseek", "gemini"
+ai_provider = "gemini"               # "openai", "deepseek", "gemini"
 '''
 Note: Select your AI provider.
 * "openai" - OpenAI API (GPT models) OR OpenAi-compatible APIs (like Ollama)
@@ -71,3 +73,15 @@ Set `stream_output = True` if you want to stream AI output or `stream_output = F
 
 
 
+
+
+# >>>>>>>>>>> GOOGLE GEMINI <<<<<<<<<<<
+# Used when ai_provider = "gemini". Get a free key at https://aistudio.google.com/app/apikey and paste it between the quotes.
+# Gemini writes answers to new questions (Eg: "Why do you want this job?") from your details and your resume.
+gemini_api_key = ""
+gemini_model = "gemini-3.8-flash"     # Eg: "gemini-3.8-flash" (fast, free tier). Google retired "gemini-2.5-flash" for new users
+
+
+# Your own values (user_data/settings.json, passwords in the keyring) replace the defaults above. See modules/user_settings.py
+from modules.user_settings import apply_user_settings
+apply_user_settings(globals(), "secrets")

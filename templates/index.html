@@ -1,199 +1,163 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-    <title>Applied Jobs</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { 
-            border-collapse: collapse; 
-            width: 100%;
-            margin-top: 20px;
-        }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 12px; 
-            text-align: left; 
-        }
-        th { 
-            background-color: #f4f4f4; 
-            font-weight: bold;
-        }
-        tr:nth-child(even) { background-color: #f8f8f8; }
-        a { 
-            color: #0066cc;
-            text-decoration: none;
-        }
-        a:hover { text-decoration: underline; }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .sl-column {
-            width: 50px;
-            text-align: center;
-        }
-        .sort-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0 5px;
-            font-size: 12px;
-        }
-        .sort-button:hover {
-            color: #0066cc;
-        }
-        .applied-column {
-            width: 70px;
-            text-align: center;
-        }
-        .tick {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="app-token" content="{{ token }}">
+  <title>Apply &amp; Pray</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🙏</text></svg>">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Applied Jobs History</h1>
-        <table id="jobsTable">
-            <thead>
-                <tr>
-                    <th class="sl-column">Sl No</th>
-                    <th>Job Title</th>
-                    <th>Company</th>  
-                    <th>HR Contact</th>
-                    <th>
-                        External Link
-                        <button class="sort-button" onclick="sortByExternalLink()">↕️</button>
-                    </th> 
-                    <th class="applied-column">Applied</th>
-                </tr>
-            </thead>
-            <tbody id="jobsBody"></tbody>
-        </table>
-    </div>
+  <header class="topbar">
+    <div class="brand">🙏 Apply &amp; Pray</div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="setup" role="tab">Setup</button>
+      <button class="tab" data-tab="run" role="tab">Run</button>
+      <button class="tab" data-tab="review" role="tab">Review <span class="tab-badge hidden" id="review-badge"></span></button>
+      <button class="tab" data-tab="people" role="tab">People</button>
+      <button class="tab" data-tab="applications" role="tab">Applications</button>
+    </nav>
+  </header>
 
-    <script>
-        let sortOrder = 'asc';
-        let jobsData = [];
-        let appliedJobs = new Set();
+  <main>
+    <!-- SETUP -->
+    <section id="tab-setup" class="page">
+      <div class="intro card">
+        <div>
+          <h1>Set up, step by step</h1>
+          <p class="muted">Each step unlocks more of the bot. Everything you enter stays on this computer.</p>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label" id="progress-label"></div>
+          <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+        </div>
+      </div>
+      <h2 class="section-title">Features</h2>
+      <div class="features" id="features"></div>
+      <h2 class="section-title">Steps</h2>
+      <div id="steps"></div>
+    </section>
 
-        // Replace the createTableRow function with this updated version
-        function createTableRow(job, index) {
-            const row = document.createElement('tr');
-            
-            // Serial Number
-            const slCell = document.createElement('td');
-            slCell.textContent = index + 1;
-            slCell.className = 'sl-column';
-            row.appendChild(slCell);
-            
-            // Job Title with link
-            const titleCell = document.createElement('td');
-            const titleLink = document.createElement('a');
-            titleLink.href = job.Job_Link;
-            titleLink.textContent = job.Title;
-            titleLink.target = '_blank';
-            titleCell.appendChild(titleLink);
-            row.appendChild(titleCell);
-            
-            // Company
-            const companyCell = document.createElement('td');
-            companyCell.textContent = job.Company;
-            row.appendChild(companyCell);
-            
-            // HR Name with link
-            const hrCell = document.createElement('td');
-            if (job.HR_Name && job.HR_Name !== 'Unknown') {
-                const hrLink = document.createElement('a');
-                hrLink.href = job.HR_Link;
-                hrLink.textContent = job.HR_Name;
-                hrLink.target = '_blank';
-                hrCell.appendChild(hrLink);
-            } else {
-                hrCell.textContent = 'N/A';
-            }
-            row.appendChild(hrCell);
-            
-            // External Job Link
-            const extCell = document.createElement('td');
-            const appliedCell = document.createElement('td');
-            appliedCell.className = 'applied-column';
+    <!-- RUN -->
+    <section id="tab-run" class="page hidden">
+      <div class="card">
+        <h1>Run the bot</h1>
+        <p class="muted">A Chrome window opens and the bot works in it. Keep this page open to control it.</p>
+        <div class="modes" id="modes"></div>
+        <div class="row gap">
+          <button class="btn primary" id="start-btn">Start</button>
+          <span class="error" id="run-error"></span>
+        </div>
+      </div>
+      <div class="card hidden" id="running-card">
+        <div class="row between">
+          <div>
+            <div class="status-line"><span class="dot" id="run-dot"></span><b id="run-title"></b></div>
+            <div class="muted" id="run-status"></div>
+          </div>
+          <div class="row gap wrap">
+            <button class="btn" id="pause-btn">Pause</button>
+            <button class="btn" data-action="skip">Skip this job</button>
+            <button class="btn" data-action="stop">Stop after this job</button>
+            <button class="btn danger" data-action="quit">Quit now</button>
+          </div>
+        </div>
+        <pre class="log" id="run-log"></pre>
+      </div>
+      <div class="tiles" id="run-stats"></div>
+    </section>
 
-            if (job.External_Job_link === 'Easy Applied') {
-                extCell.textContent = 'Easy Applied';
-                appliedCell.innerHTML = '<span class="tick">✓</span>';
-            } else if (job.External_Job_link) {
-                const extLink = document.createElement('a');
-                extLink.href = job.External_Job_link;
-                extLink.textContent = 'External Link';
-                extLink.target = '_blank';
-                
-                // Add click handler for external link
-                extLink.addEventListener('click', async () => {
-                    try {
-                        const response = await fetch(`/applied-jobs/${job.Job_ID}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
-                        if (response.ok) {
-                            appliedCell.innerHTML = '<span class="tick">✓</span>';
-                            job.Date_Applied = new Date().toISOString();
-                        }
-                    } catch (error) {
-                        console.error('Error updating applied date:', error);
-                    }
-                });
-                
-                extCell.appendChild(extLink);
-                // Show tick if already applied
-                if (job.Date_Applied !== 'Pending') {
-                    appliedCell.innerHTML = '<span class="tick">✓</span>';
-                }
-            } else {
-                extCell.textContent = 'N/A';
-            }
-            row.appendChild(extCell);
-            row.appendChild(appliedCell);
-            
-            return row;
-        }
+    <!-- REVIEW -->
+    <section id="tab-review" class="page hidden">
+      <div class="card">
+        <h1>Review</h1>
+        <p class="muted">Everything the bot wants to send waits here. Nothing goes out until you approve it. Edit anything first.</p>
+      </div>
+      <div class="card">
+        <div class="row between wrap">
+          <h2>Connection requests <span class="count" id="invites-count"></span></h2>
+          <div class="row gap wrap">
+            <button class="btn small" id="find-people">Find people to connect with</button>
+            <button class="btn small" id="approve-all">Approve all</button>
+          </div>
+        </div>
+        <p class="muted" id="invite-info"></p>
+      </div>
+      <div id="invites"></div>
+      <div class="card">
+        <div class="row between wrap">
+          <h2>Messages <span class="count" id="messages-count"></span></h2>
+          <button class="btn small" id="approve-all-messages">Approve all</button>
+        </div>
+        <p class="muted" id="message-info"></p>
+      </div>
+      <div id="messages"></div>
+      <div class="card">
+        <h2>Emails</h2>
+        <p class="muted" id="review-info"></p>
+      </div>
+      <div id="drafts"></div>
+      <div class="card">
+        <div class="row between wrap">
+          <h2>Feed posts the bot read <span class="count" id="posts-count"></span></h2>
+          <button class="btn small" data-export="feed_posts">Export CSV</button>
+        </div>
+        <div class="table-wrap"><table id="posts-table"></table></div>
+      </div>
+    </section>
 
-        function sortByExternalLink() {
-            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-            
-            jobsData.sort((a, b) => {
-                const valueA = a.External_Job_link || '';
-                const valueB = b.External_Job_link || '';
-                
-                if (sortOrder === 'asc') {
-                    return valueA.localeCompare(valueB);
-                } else {
-                    return valueB.localeCompare(valueA);
-                }
-            });
-            
-            const tbody = document.getElementById('jobsBody');
-            tbody.innerHTML = '';
-            jobsData.forEach((job, index) => {
-                tbody.appendChild(createTableRow(job, index));
-            });
-        }
+    <!-- PEOPLE -->
+    <section id="tab-people" class="page hidden">
+      <div class="card">
+        <h1>People</h1>
+        <p class="muted">Everyone the bot is reaching out to, and where they are. When someone replies, it's your turn: the bot never messages them again.</p>
+      </div>
+      <div class="tiles" id="people-stats"></div>
+      <div class="card">
+        <div class="row between wrap">
+          <h2>Everyone</h2>
+          <div class="row gap wrap">
+            <select id="people-filter"><option value="">All</option></select>
+            <button class="btn small" data-export="people">Export CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table id="people-table"></table></div>
+      </div>
+    </section>
 
-        fetch('http://localhost:5000/applied-jobs')
-            .then(response => response.json())
-            .then(jobs => {
-                jobsData = jobs;
-                const tbody = document.getElementById('jobsBody');
-                jobs.forEach((job, index) => {
-                    tbody.appendChild(createTableRow(job, index));
-                });
-            })
-            .catch(error => console.error('Error:', error));
-    </script>
+    <!-- APPLICATIONS -->
+    <section id="tab-applications" class="page hidden">
+      <div class="tiles" id="app-stats"></div>
+      <div class="card">
+        <div class="row between wrap">
+          <h2>Apply by hand <span class="count" id="hand-count"></span></h2>
+          <button class="btn small" data-export="apply_by_hand">Export CSV</button>
+        </div>
+        <p class="muted">Jobs the bot couldn't finish. Open the link, apply, then mark it applied.</p>
+        <div class="table-wrap"><table id="hand-table"></table></div>
+      </div>
+      <div class="card">
+        <div class="row between wrap">
+          <h2>All applications</h2>
+          <div class="row gap wrap">
+            <input type="search" id="app-search" placeholder="Search title or company">
+            <select id="app-filter">
+              <option value="">All</option>
+              <option value="easy">Easy Apply</option>
+              <option value="normal">Normal Apply</option>
+              <option value="link">Link saved</option>
+            </select>
+            <button class="btn small" data-export="applications">Export CSV</button>
+            <button class="btn small" data-export="failures">Export failures</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table id="app-table"></table></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast hidden" id="toast"></div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
-

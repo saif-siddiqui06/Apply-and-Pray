@@ -1,3 +1,4 @@
+# DEFAULTS ONLY. Your choices go in the dashboard (user_data/settings.json), never in this file: it is shared in git.
 
 
 
@@ -5,16 +6,37 @@
 
 # These Sentences are Searched in LinkedIn
 # Enter your search terms inside '[ ]' with quotes ' "searching title" ' for each search followed by comma ', ' Eg: ["Software Engineer", "Software Developer", "Selenium Developer"]
-search_terms = ["Technical Support Lead", "IT Helpdesk lead"]
+search_terms = ["Software Engineer", "Python Developer"]
 
-# Search location, this will be filled in "City, state, or zip code" search box. If left empty as "", tool will not fill it.
-search_location = "Pune City, Maharashtra, India"              
+'''
+Note: Each search uses ONE position from this list, picked at random (randomize_search_order). When it has no more new jobs,
+or after `switch_number` applications, the bot searches the next position. "Python Developer Intern" is covered by "Python Developer".
+All filters below are put straight into LinkedIn's search address (f_AL=true for Easy Apply, f_E for experience level...), no clicking.
+'''
+
+# Newest jobs come first (sort_by = "Most recent"): after this many result pages in a row with no new job, go to the next search. 0 = all pages
+stop_after_pages_without_new_jobs = 2   # Only numbers 0 or more... Don't put in quotes
+
+# Skip jobs whose TITLE has one of these words, right from the job list without opening them. [] to turn off.
+skip_title_words = ["Senior", "Sr.", "Sr", "Lead", "Manager", "Principal", "Staff", "Architect", "Head", "Director", "VP", "Vice President", "Expert"]
+
+# At most `max_applications_per_company` applications to the same company in the last `avoid_same_company_days` days (0 days = no company limit).
+# The same company + same job title (a repost) is always skipped, whatever these say.
+avoid_same_company_days = 7        # Only numbers 0 or more... Don't put in quotes
+max_applications_per_company = 2   # Only numbers greater than 0... Don't put in quotes
+
+# Try jobs again that were skipped before? If False: jobs that don't fit you (experience, bad words...) are never opened again,
+# jobs that failed because of an error (a page that didn't load...) are tried once more.
+retry_failed_jobs = False          # True or False, Note: True or False are case-sensitive
+
+# Search location: one place like "India", "Delhi, India" or "Bengaluru". A list of places becomes its country ("Delhi, Noida, India" -> "India"). "" for anywhere.
+search_location = "" # "City, state, or zip code" or "" to leave this question unanswered 
 
 # After how many number of applications in current search should the bot switch to next search? 
 switch_number = 30                 # Only numbers greater than 0... Don't put in quotes
 
-# Do you want to randomize the search order for search_terms?
-randomize_search_order = False     # True of False, Note: True or False are case-sensitive
+# Do you want to randomize the search order for search_terms? (Shuffled again on every run, so each run shows different jobs first)
+randomize_search_order = True      # True of False, Note: True or False are case-sensitive
 
 
 # >>>>>>>>>>> Job Search Filters <<<<<<<<<<<
@@ -34,13 +56,13 @@ This is below format: QUESTION = VALID_ANSWER
 
 '''
 
-sort_by = ""                       # "Most recent", "Most relevant" or ("" to not select) 
+sort_by = "Most recent"                       # "Most recent", "Most relevant" or ("" to not select) 
 date_posted = "Past week"         # "Any time", "Past month", "Past week", "Past 24 hours" or ("" to not select)
 salary = ""                        # "$40,000+", "$60,000+", "$80,000+", "$100,000+", "$120,000+", "$140,000+", "$160,000+", "$180,000+", "$200,000+"
 
 easy_apply_only = True             # True or False, Note: True or False are case-sensitive
 
-experience_level = []              # (multiple select) "Internship", "Entry level", "Associate", "Mid-Senior level", "Director", "Executive"
+experience_level = ["Internship", "Entry level"]             # (multiple select) "Internship", "Entry level", "Associate", "Mid-Senior level", "Director", "Executive"
 job_type = []                      # (multiple select) "Full-time", "Part-time", "Contract", "Temporary", "Volunteer", "Internship", "Other"
 on_site = []                       # (multiple select) "On-site", "Remote", "Hybrid"
 
@@ -60,8 +82,6 @@ fair_chance_employer = False       # True or False, Note: True or False are case
 
 ## >>>>>>>>>>> RELATED SETTING <<<<<<<<<<<
 
-# Pause after applying filters to let you modify the search results and filters?
-pause_after_filters = True         # True or False, Note: True or False are case-sensitive
 
 ##
 
@@ -83,10 +103,10 @@ bad_words = ["US Citizen","USA Citizen","No C2C", "No Corp2Corp", ".NET", "Embed
 security_clearance = False         # True or False, Note: True or False are case-sensitive
 
 # Do you have a Masters degree? (True for Yes and False for No). If True, the tool will apply to jobs containing the word 'master' in their job description and if it's experience required <= current_experience + 2 and current_experience is not set as -1. 
-did_masters = False                 # True or False, Note: True or False are case-sensitive
+did_masters = False                # True or False, Note: True or False are case-sensitive
 
 # Avoid applying to jobs if their required experience is above your current_experience. (Set value as -1 if you want to apply to all ignoring their required experience...)
-current_experience = 7             # Integers > -2 (Ex: -1, 0, 1, 2, 3, 4...)
+current_experience = 0             # Integers > -2 (Ex: -1, 0, 1, 2, 3, 4...)
 ##
 
 
@@ -96,3 +116,7 @@ current_experience = 7             # Integers > -2 (Ex: -1, 0, 1, 2, 3, 4...)
 
 ############################################################################################################
 
+
+# Your own values (user_data/settings.json) replace the defaults above. See modules/user_settings.py
+from modules.user_settings import apply_user_settings
+apply_user_settings(globals(), "search")

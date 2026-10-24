@@ -1,42 +1,38 @@
 '''
-Author:     Shubham
-LinkedIn:   https://www.linkedin.com/in/shubham-sunil-kumar-333547133/
-
-Copyright (C) 2024 Shubham
-
 License:    GNU Affero General Public License
             https://www.gnu.org/licenses/agpl-3.0.en.html
-            
-GitHub:     https://github.com/theturkishangorashiro-art/apply-and-pray
 
 version:    2024.11.28.16.00
 '''
 
 
+# DEFAULTS ONLY. Your details go in the dashboard (user_data/settings.json), never in this file: it is shared in git.
 ###################################################### CONFIGURE YOUR TOOLS HERE ######################################################
 
 
 # >>>>>>>>>>> Easy Apply Questions & Inputs <<<<<<<<<<<
 
 # Your legal name
-first_name = "Shubham"                 
-middle_name = "Sunil"            
-last_name = "Kumar"                
+first_name = "First"                 
+middle_name = ""            
+last_name = "Last"                
 
 # Phone number (required), make sure it's valid.
-phone_number = "0987654321"       
+email = ""                          # Email for company websites (Normal Apply). If "", your LinkedIn login email from secrets.py is used
+
+phone_number = "9876543210"       
 
 # What is your current city?
-current_city = "Pune"                  
+current_city = ""          # "City Name" or "" to leave this question unanswered
 '''
 Note: If left empty as "", the bot will fill in location of jobs location.
 '''
 
 # Address, not so common question but some job applications make it required!
-street = "1302, t-10, vtp cygnus, manjri khurd, Pune"
-state = "Maharastra"
-zipcode = "412307"
-country = "India"
+street = ""
+state = ""
+zipcode = ""
+country = ""
 
 ## US Equal Opportunity questions
 # What is your ethnicity or race? If left empty as "", tool will not answer the question. However, note that some companies make it compulsory to be answered
@@ -80,7 +76,11 @@ As an independent developer, I pour my heart and soul into creating tools like t
 
 Your support, whether through donations big or small or simply spreading the word, means the world to me and helps keep this project alive and thriving.
 
-Gratefully yours 🙏🏻,
-Shubham
+Gratefully yours 🙏🏻
 '''
 ############################################################################################################
+
+
+# Your own values (user_data/settings.json, passwords in the keyring) replace the defaults above. See modules/user_settings.py
+from modules.user_settings import apply_user_settings
+apply_user_settings(globals(), "personals")

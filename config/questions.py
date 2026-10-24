@@ -2,16 +2,17 @@
 
 
 
+# DEFAULTS ONLY. Your details go in the dashboard (user_data/settings.json), never in this file: it is shared in git.
 ###################################################### APPLICATION INPUTS ######################################################
 
 
 # >>>>>>>>>>> Easy Apply Questions & Inputs <<<<<<<<<<<
 
 # Give an relative path of your default resume to be uploaded. If file in not found, will continue using your previously uploaded resume in LinkedIn.
-default_resume_path = "all resumes/default/resume.pdf"      # (In Development)
+default_resume_path = "user_data/resumes/resume.pdf"      # (In Development)
 
 # What do you want to answer for questions that ask about years of experience you have, this is different from current_experience? 
-years_of_experience = "7"          # A number in quotes Eg: "0","1","2","3","4", etc.
+years_of_experience = "0"          # A number in quotes Eg: "0","1","2","3","4", etc.
 
 # Do you need visa sponsorship now or in future?
 require_visa = "No"               # "Yes" or "No"
@@ -21,18 +22,18 @@ website = ""
 
 
 # Please provide the link to your LinkedIn profile.
-linkedIn = "https://www.linkedin.com/in/shubham-sunil-kumar-333547133/"       # "https://www.linkedin.com/in/example" or "" and so on...
+linkedIn = ""       # "https://www.linkedin.com/in/example" or "" and so on...
 
 # What is the status of your citizenship? # If left empty as "", tool will not answer the question. However, note that some companies make it compulsory to be answered
 # Valid options are: "U.S. Citizen/Permanent Resident", "Non-citizen allowed to work for any employer", "Non-citizen allowed to work for current employer", "Non-citizen seeking work authorization", "Canadian Citizen/Permanent Resident" or "Other"
-us_citizenship = "U.S. Citizen/Permanent Resident"
+us_citizenship = "Non-citizen allowed to work for current employer"
 
 
 
 ## SOME ANNOYING QUESTIONS BY COMPANIES 🫠 ##
 
 # What to enter in your desired salary question (American and European), What is your expected CTC (South Asian and others)?, only enter in numbers as some companies only allow numbers,
-desired_salary = 1500000          # 80000, 90000, 100000 or 120000 and so on... Do NOT use quotes
+desired_salary = 600000          # 80000, 90000, 100000 or 120000 and so on... Do NOT use quotes
 '''
 Note: If question has the word "lakhs" in it (Example: What is your expected CTC in lakhs), 
 then it will add '.' before last 5 digits and answer. Examples: 
@@ -44,7 +45,7 @@ And if asked in months, then it will divide by 12 and answer. Examples:
 '''
 
 # What is your current CTC? Some companies make it compulsory to be answered in numbers...
-current_ctc = 1100000            # 800000, 900000, 1000000 or 1200000 and so on... Do NOT use quotes
+current_ctc = 0          # 800000, 900000, 1000000 or 1200000 and so on... Do NOT use quotes
 '''
 Note: If question has the word "lakhs" in it (Example: What is your current CTC in lakhs), 
 then it will add '.' before last 5 digits and answer. Examples: 
@@ -59,7 +60,7 @@ then it will add '.' before last 5 digits and answer. Examples:
 # currency = "INR"                 # "USD", "INR", "EUR", etc.
 
 # What is your notice period in days?
-notice_period = 60                   # Any number >= 0 without quotes. Eg: 0, 7, 15, 30, 45, etc.
+notice_period = 7                  # Any number >= 0 without quotes. Eg: 0, 7, 15, 30, 45, etc.
 '''
 Note: If question has 'month' or 'week' in it (Example: What is your notice period in months), 
 then it will divide by 30 or 7 and answer respectively. Examples:
@@ -72,11 +73,10 @@ then it will divide by 30 or 7 and answer respectively. Examples:
 '''
 
 # Your LinkedIn headline in quotes Eg: "Software Engineer @ Google, Masters in Computer Science", "Recent Grad Student @ MIT, Computer Science"
-linkedin_headline = "IT Technical Support Specialist | Nexthink |  ServiceNow |Office 365| Microsoft O365 | Active Directory | Azure AD | Citrix VDI | L1 L2 Support | Desktop & Cloud Support | Incident Management" # "Headline" or "" to leave this question unanswered
+linkedin_headline = ""
 
 # Your summary in quotes, use \n to add line breaks if using single quotes "Summary".You can skip \n if using triple quotes """Summary"""
 linkedin_summary = """
-IT Technical Support Specialist with 7+ years delivering L1/L2 support to global enterprise users across desktop, VDI and cloud environments. Proven at resolving Microsoft 365, Windows and macOS issues, administering Active Directory/Azure AD, and managing incidents in ServiceNow while meeting SLA targets. Skilled in device lifecycle and endpoint management using Microsoft Intune, Autopilot, SCCM and Nexthink for proactive monitoring and performance improvements; experienced with Citrix, AWS WorkSpaces, security tools (Carbon Black, Zscaler) and automation via PowerShell. Strong communicator who improves user satisfaction through timely resolution, clear guidance and cross‑functional collaboration; open to Helpdesk, EUC, Desktop or Cloud Support roles in enterprise or product organisations.
 """
 
 '''
@@ -99,10 +99,10 @@ Note: If left empty as "", the tool will not answer the question. However, note 
 ''' 
 
 # Name of your most recent employer
-recent_employer = "ZS Associates" # "", "Lala Company", "Google", "Snowflake", "Databricks"
+recent_employer = "" # "", "Lala Company", "Google", "Snowflake", "Databricks"
 
 # Example question: "On a scale of 1-10 how much experience do you have building web or mobile applications? 1 being very little or only in school, 10 being that you have built and launched applications to real users"
-confidence_level = "8"             # Any number between "1" to "10" including 1 and 10, put it in quotes ""
+confidence_level = "7"             # Any number between "1" to "10" including 1 and 10, put it in quotes ""
 ##
 
 
@@ -111,7 +111,7 @@ confidence_level = "8"             # Any number between "1" to "10" including 1 
 
 ## Allow Manual Inputs
 # Should the tool pause before every submit application during easy apply to let you check the information?
-pause_before_submit = True         # True or False, Note: True or False are case-sensitive
+pause_before_submit = False         # True or False, Note: True or False are case-sensitive
 '''
 Note: Will be treated as False if `run_in_background = True`
 '''
@@ -135,3 +135,7 @@ overwrite_previous_answers = False # True or False, Note: True or False are case
 
 ############################################################################################################
 
+
+# Your own values (user_data/settings.json, passwords in the keyring) replace the defaults above. See modules/user_settings.py
+from modules.user_settings import apply_user_settings
+apply_user_settings(globals(), "questions")

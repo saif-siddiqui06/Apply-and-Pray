@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Setup guides · Apply &amp; Pray</title>
+  <meta name="description" content="Step-by-step setup for Apply & Pray: installing, LinkedIn login, a free Gemini AI key, a Gmail app password, and networking settings.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🙏</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="./">🙏 Apply &amp; Pray</a>
+      <nav class="nav-links">
+        <a href="./#features">Features</a>
+        <a href="./#safety">Safety</a>
+        <a href="./#faq">FAQ</a>
+        <a class="btn primary small" href="./#download">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap guide-layout">
+    <nav class="toc" aria-label="Guides">
+      <a href="#install">1. Install</a>
+      <a href="#smartscreen">Windows warning</a>
+      <a href="#basics">2. Your basics</a>
+      <a href="#linkedin">3. LinkedIn login</a>
+      <a href="#ai">4. AI key (free)</a>
+      <a href="#details">5. Application details</a>
+      <a href="#gmail">6. Gmail app password</a>
+      <a href="#networking">7. Networking</a>
+      <a href="#running">Running it well</a>
+      <a href="#trouble">Troubleshooting</a>
+    </nav>
+
+    <div>
+      <article class="guide" id="install">
+        <h2>1. Install</h2>
+        <p class="why">About 2 minutes. You need Windows 10 or 11 and Google Chrome.</p>
+        <ol>
+          <li>Install or update <a href="https://www.google.com/chrome/" target="_blank" rel="noopener">Google Chrome</a> if you don't have it.</li>
+          <li>On the <a href="./#download">download page</a>, get <b>ApplyAndPray-windows.zip</b> (or <b>ApplyAndPray-Setup.exe</b> if it's offered).</li>
+          <li>Zip: right-click it → <b>Extract All</b>, choose a folder (Eg: Documents). Keep all the files together. Installer: just run it.</li>
+          <li>Open <b>ApplyAndPray.exe</b>. A small black window opens (keep it open while you use the app) and your dashboard opens in your browser at <code>http://127.0.0.1:5000</code>.</li>
+        </ol>
+        <p>Closing the small window stops the app. Opening the app again while it runs just shows the dashboard.</p>
+      </article>
+
+      <article class="guide" id="smartscreen">
+        <h2>“Windows protected your PC”</h2>
+        <p class="why">Windows shows this for apps that aren't signed with a paid certificate, which this free project doesn't have yet.</p>
+        <ol>
+          <li>Click <b>More info</b>.</li>
+          <li>Check the publisher line says “Unknown publisher” and the file is <b>ApplyAndPray.exe</b> from the official download page.</li>
+          <li>Click <b>Run anyway</b>. Windows remembers your choice.</li>
+        </ol>
+        <p>The code is open: anyone can read it, or build the app themselves with <code>packaging\build.ps1</code>.</p>
+      </article>
+
+      <article class="guide" id="basics">
+        <h2>2. Your basics</h2>
+        <p class="why">Used in every application form, and to search jobs for you. Unlocks nothing alone, but everything needs it.</p>
+        <ol>
+          <li>In the dashboard, open <b>Setup → Your basics</b>.</li>
+          <li>Fill your name, application email, phone (without the country code) and location.</li>
+          <li>Upload your resume as a <b>PDF</b>. The dashboard shows the text it could read from it: if it's empty, your PDF is a scan or an image, and job websites can't read it either. Export it as a text PDF from Word / Google Docs.</li>
+          <li>Add the job titles you want (one per line), where, and your years of experience (0 if you're a fresher). Jobs asking for more experience are skipped.</li>
+          <li>Click <b>Save</b>.</li>
+        </ol>
+      </article>
+
+      <article class="guide" id="linkedin">
+        <h2>3. LinkedIn login</h2>
+        <p class="why">The bot works inside its own Chrome window, logged in to your LinkedIn. Unlocks Easy Apply, company websites and feed jobs.</p>
+        <ol>
+          <li>Close any Chrome window the bot opened before.</li>
+          <li>In <b>Setup → LinkedIn login</b>, click <b>Open LinkedIn</b>. A separate Chrome window opens: the bot's own browser, not your normal Chrome.</li>
+          <li>Log in as usual, including the code LinkedIn may send you.</li>
+          <li>When your feed shows, the step turns green by itself and the window closes.</li>
+        </ol>
+        <p>You stay logged in for future runs. <b>The app never asks for or saves your LinkedIn password.</b></p>
+      </article>
+
+      <article class="guide" id="ai">
+        <h2>4. AI key (Google Gemini, free)</h2>
+        <p class="why">Answers new questions in forms, and writes notes, emails and messages from your resume. Optional, but recommended.</p>
+        <ol>
+          <li>Open <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> and sign in with your Google account.</li>
+          <li>Click <b>Create API key</b> and copy it.</li>
+          <li>In <b>Setup → AI assistant</b>, choose Google Gemini, paste the key and click <b>Save and test</b>.</li>
+        </ol>
+        <p>The free plan has a daily limit. When a model's limit is used up, the app switches to another model, and when all are used up it continues without AI until the next day (questions it can't answer are asked in a popup, or the job is saved for you).</p>
+        <p><b>Other options:</b> OpenAI (paid: key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>, model <code>gpt-4o-mini</code>),
+          DeepSeek (paid, low cost: <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">platform.deepseek.com/api_keys</a>, model <code>deepseek-chat</code>),
+          or a free model on your own PC with <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> / <a href="https://lmstudio.ai" target="_blank" rel="noopener">LM Studio</a> (choose “Local model”).</p>
+        <p>Your key is kept in Windows Credential Manager, never in a file.</p>
+      </article>
+
+      <article class="guide" id="details">
+        <h2>5. Application details</h2>
+        <p class="why">Common questions on company websites, and an account for job sites that need one. Unlocks company-website applications.</p>
+        <ol>
+          <li>In <b>Setup → Application details</b>, fill your expected salary, notice period, LinkedIn link and so on.</li>
+          <li><b>Job-site password:</b> many career sites need an account; the app creates and signs in to them with this email and password.
+            Use a <b>new password you don't use anywhere else</b> (not your Gmail or LinkedIn password), with 8+ characters, a capital letter, a number and a symbol.
+            Leave it empty and those jobs are saved for you to apply by hand.</li>
+        </ol>
+      </article>
+
+      <article class="guide" id="gmail">
+        <h2>6. Gmail app password</h2>
+        <p class="why">For jobs posted as “send your CV to hr@company.com”: the app emails your resume from your Gmail, after you approve each email.</p>
+        <ol>
+          <li>Open <a href="https://myaccount.google.com/security" target="_blank" rel="noopener">myaccount.google.com/security</a> and turn on <b>2-Step Verification</b> (Google requires it).</li>
+          <li>Open <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">myaccount.google.com/apppasswords</a>.</li>
+          <li>Type a name, Eg: <b>Apply and Pray</b>, and click <b>Create</b>.</li>
+          <li>Copy the 16-letter password (spaces don't matter).</li>
+          <li>In <b>Setup → Gmail</b>, enter your Gmail address and that password, then <b>Save and test</b>: you'll get a test email from yourself.</li>
+        </ol>
+        <p>This is <b>not</b> your Gmail password, and you can delete it on the same Google page any time to cut the app off. School and work Google accounts may not allow app passwords.</p>
+      </article>
+
+      <article class="guide" id="networking">
+        <h2>7. Networking</h2>
+        <p class="why">Connection requests to people who can help, and personal messages after they accept. Unlocks the Networking run.</p>
+        <ol>
+          <li>In <b>Setup → Networking</b>, write your <b>pitch</b> in 2-3 lines: what you study or do, your top skills, the roles you want, one result you're proud of. Every note and message is written from it.</li>
+          <li>Tick whether you have LinkedIn Premium (free accounts can add a note to only a few invitations a month), and add your college to reach alumni.</li>
+          <li>Keep the limits as they are unless you know what you're doing.</li>
+          <li>In <b>Review</b>, click <b>Find people to connect with</b>, read the requests, edit or skip any, then approve.</li>
+          <li>Go to <b>Run → Networking</b>. Run it again on later days: it checks who accepted, writes their messages (you approve), sends one follow-up after 6 days without a reply, and never writes again once they reply.</li>
+        </ol>
+      </article>
+
+      <article class="guide" id="running">
+        <h2>Running it well</h2>
+        <ul class="checklist">
+          <li>Run during the day, for an hour or two, not all day long.</li>
+          <li>Keep the default limits. If LinkedIn ever shows a warning, stop for a few days.</li>
+          <li>Check <b>Review</b> once a day: approve what looks right, edit what doesn't.</li>
+          <li>Check <b>People</b> for “Replied: your turn”, and answer them yourself.</li>
+          <li>Open <b>Applications → Apply by hand</b> for jobs the app couldn't finish.</li>
+        </ul>
+      </article>
+
+      <article class="guide" id="trouble">
+        <h2>Troubleshooting</h2>
+        <details><summary>Chrome doesn't open, or closes at once</summary><p>Update Google Chrome, close all Chrome windows the bot opened, and try again. The first run downloads a small Chrome helper, so it needs internet.</p></details>
+        <details><summary>The LinkedIn step doesn't turn green</summary><p>Make sure you got all the way to your LinkedIn feed in the window the app opened (not your normal Chrome). It waits up to 5 minutes; click Open LinkedIn again if needed.</p></details>
+        <details><summary>“AI isn't working” or the free limit is used up</summary><p>The free Gemini plan resets every day. Click Test again tomorrow, or add a paid provider. The app keeps working without AI.</p></details>
+        <details><summary>Gmail test fails</summary><p>Use an <b>app password</b> (16 letters), not your normal password, and check 2-Step Verification is on. Make a new app password if unsure.</p></details>
+        <details><summary>Where are the logs?</summary><p>In <code>%LOCALAPPDATA%\ApplyAndPray\logs\log.txt</code>. When a page can't be read, a copy is saved in <code>logs\easy_apply_forms</code>: attach it if you report a problem.</p></details>
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>🙏 Apply &amp; Pray · Open source under AGPL-3.0 · Not affiliated with LinkedIn</span>
+      <span><a href="./">Home</a> · <a href="./#download">Download</a> · <a href="./#faq">FAQ</a></span>
+    </div>
+  </footer>
+</body>
+</html>

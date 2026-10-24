@@ -1,14 +1,27 @@
-__pycache__
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Editors
 .vscode
 .idea
 
-all excels
-all resumes
-logs
+# YOUR DATA: details, passwords fallback, saved answers, resumes, job history, logs. Never commit these.
+user_data/
+all excels/
+all resumes/
+logs/
+modules/resumes/*.pdf
+modules/resumes/*.docx
+old/
 
-old
-
-secrets.py
-config/personals.py
-.venv
+# Old locations of personal files (now in user_data/)
 apikeys.py
+config/saved_answers.json
+config/portal_accounts.json
+
+# Build output (packaging/build.ps1)
+build/
+dist/

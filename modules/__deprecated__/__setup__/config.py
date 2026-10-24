@@ -56,6 +56,8 @@ use_resume_generator = False       # True or False, Note: True or False are case
 
 # ----------------------------------------------  AUTO APPLIER  ---------------------------------------------- #
 
+
+
 # Login Credentials for LinkedIn
 username = "username@example.com"  # Enter your username in the quotes
 password = "example_password"      # Enter your password in the quotes
@@ -77,6 +79,7 @@ question_2 = []                    # (multiple select)
 question_3 = []                    # (dynamic multiple select)
 
 '''
+
 
 sort_by = ""                       # "Most recent", "Most relevant" or ("" to not select) 
 date_posted = "Past month"         # "Any time", "Past month", "Past week", "Past 24 hours" or ("" to not select)
@@ -200,6 +203,7 @@ did_masters = True                 # True or False, Note: True or False are case
 # Avoid applying to jobs if their required experience is above your current_experience. (Set value as -1 if you want to apply to all ignoring their required experience...)
 current_experience = 5             # Integers > -2 (Ex: -1, 0, 1, 2, 3, 4...)
 ##
+
 
 
 ## Allow Manual Inputs
