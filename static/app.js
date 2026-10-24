@@ -279,7 +279,7 @@ function renderModes() {
 $("#start-btn").addEventListener("click", async () => {
   $("#run-error").textContent = "";
   if (!selectedMode || $(`#modes .mode[data-mode="${selectedMode}"]`)?.disabled) { $("#run-error").textContent = "Choose a mode first."; return; }
-  try { renderRun(await api("/api/run/start", { json: { mode: selectedMode } })); startRunPolling(); }
+  try { renderRun(await api("/api/run/start", { json: { mode: selectedMode, test: $("#test-run").checked } })); startRunPolling(); }
   catch (e) { $("#run-error").textContent = e.message; }
 });
 
@@ -301,7 +301,7 @@ function renderRun(state) {
   if (state.running || state.started) {
     $("#run-dot").className = "dot" + (state.running ? (state.paused ? " paused" : "") : " off");
     $("#run-title").textContent = state.running
-      ? `${state.paused ? "Paused" : state.stopping ? "Stopping after this job" : "Running"}: ${MODE_NAMES[state.mode] || ""} (since ${state.started})`
+      ? `${state.paused ? "Paused" : state.stopping ? "Stopping after this job" : "Running"}: ${MODE_NAMES[state.mode] || ""}${state.test ? " · TEST RUN, nothing is sent" : ""} (since ${state.started})`
       : `Finished: ${MODE_NAMES[state.mode] || ""}`;
     $("#run-status").textContent = state.status || "";
     $("#pause-btn").textContent = state.paused ? "Resume" : "Pause";

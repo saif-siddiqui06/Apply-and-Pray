@@ -94,6 +94,12 @@ def match_option(answer: str | None, options: list[str] | None) -> str | None:
         in_range = [option for option, _ in choices if _option_contains_number(option, value)]
         if len(in_range) == 1: return in_range[0]
 
+    # 4b. "0 year" / "2 years" / "4 months": the option that starts with the same number ("0 years", "4 Months")
+    leading = re.match(r'(\d+)\s+(year|month|day|week)', answer_clean)
+    if leading:
+        same = [option for option, clean in choices if re.match(leading.group(1) + r'\s*' + leading.group(2), clean)]
+        if len(same) == 1: return same[0]
+
     # 5. Whole-word containment in either direction, only if exactly one option matches
     contained = [option for option, clean in choices
                  if re.search(r'\b' + re.escape(answer_clean) + r'\b', clean) or re.search(r'\b' + re.escape(clean) + r'\b', answer_clean)]

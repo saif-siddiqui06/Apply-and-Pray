@@ -80,7 +80,7 @@ def role_of(text: str, fallback: str) -> str:
     for match in ROLE_LINE_RE.finditer(text or ""):
         role = tidy(match.group(1))
         if role.isupper(): role = role.title()   # "PYTHON DEVELOPER" -> "Python Developer"
-        if 2 < len(role) <= 70 and not EMAIL_RE.search(role) and "http" not in role and not re.search(r'(?i)^(now|alert|update|drive)$|immediate|joiners?|required|urgent|opportunit|walk-?in', role): return role
+        if 2 < len(role) <= 70 and not EMAIL_RE.search(role) and "http" not in role and not re.search(r'(?i)^(now|alert|update|drive)$|immediate|joiners?\b|required|urgent|opportunit|walk-?in', role): return role
     for match in ROLE_PHRASE_RE.finditer(text or ""):
         role = tidy(match.group(1))
         words = role.lower().split()

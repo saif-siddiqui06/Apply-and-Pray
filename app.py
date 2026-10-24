@@ -159,7 +159,8 @@ def _write_control(change: dict) -> None:
 
 @app.post("/api/run/start")
 def start_bot():
-    mode = (request.get_json(force=True) or {}).get("mode")
+    data = request.get_json(force=True) or {}
+    mode, test_run = data.get("mode"), bool(data.get("test"))
     feature = {"easy": "easy", "normal": "normal", "both": "normal", "feed": "feed", "connect": "connect"}.get(mode)
     if not feature: return jsonify({"error": "Choose a mode."}), 400
     if not setup_steps.unlocked(feature) or (mode == "both" and not setup_steps.unlocked("easy")):
@@ -170,10 +171,10 @@ def start_bot():
         try: os.remove(path)
         except OSError: pass
     _bot["log_start"] = os.path.getsize(LOG_FILE) if os.path.exists(LOG_FILE) else 0
-    environment = dict(os.environ, APPLY_AND_PRAY_MODE=mode, APPLY_AND_PRAY_DASHBOARD="1", PYTHONIOENCODING="utf-8")
+    environment = dict(os.environ, APPLY_AND_PRAY_MODE=mode, APPLY_AND_PRAY_DASHBOARD="1", PYTHONIOENCODING="utf-8", APPLY_AND_PRAY_TEST_RUN="1" if test_run else "0")
     _bot["process"] = subprocess.Popen(command("bot"), cwd=APP_HOME, env=environment,
                                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=NO_WINDOW)
-    _bot["mode"], _bot["started"] = mode, datetime.now().strftime("%H:%M")
+    _bot["mode"], _bot["started"], _bot["test"] = mode, datetime.now().strftime("%H:%M"), test_run
     return jsonify(_run_status())
 
 
@@ -207,7 +208,7 @@ def _run_status() -> dict:
     try:
         with open(CONTROL_STATUS, encoding="utf-8") as file: status = file.read().strip()
     except Exception: status = ""
-    return {"running": running, "mode": _bot["mode"], "started": _bot["started"], "paused": bool(control.get("paused")) and running,
+    return {"running": running, "mode": _bot["mode"], "started": _bot["started"], "test": _bot.get("test", False), "paused": bool(control.get("paused")) and running,
             "stopping": bool(control.get("stop")) and running, "status": "" if status == "__exit__" else status,
             "log": _log_tail() if _bot["started"] else [], "stats": db.stats()}
 

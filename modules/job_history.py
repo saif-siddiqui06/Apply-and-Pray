@@ -23,6 +23,7 @@ NOT_FOR_YOU_REASONS = [
     ("Discarded by you", "you discarded it"),
     ("Skipped by you", "you skipped it"),
     ("Job is closed", "no longer accepting applications"),
+    ("Employer flagged by LinkedIn", "LinkedIn shows a safety reminder for this employer"),
 ]
 MAX_ERROR_TRIES = 2
 # Reasons that say nothing about the job itself (LinkedIn paused Easy Apply, the page didn't load in time): always tried again, never counted as errors

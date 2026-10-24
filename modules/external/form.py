@@ -124,6 +124,16 @@ for (const el of root.querySelectorAll('input, select, textarea')) {
     if (seenGroups.has(key)) continue;
     seenGroups.add(key);
     if (!group.some(g => visible(g) || (g.labels && g.labels[0] && visible(g.labels[0])) || visible(g.parentElement))) continue;
+    if (type === 'radio' && group.length > 1) {
+      // A resume picker (LinkedIn Easy Apply: one radio per uploaded file "resume.pdf  10/20/2026"): not a question. Keep the chosen file, else the newest (first)
+      let box = group[0].parentElement;
+      while (box && !group.every(g => box.contains(g))) box = box.parentElement;
+      const boxText = box ? (box.innerText || '') : '';
+      if ((boxText.match(/\.(pdf|docx?)\b/gi) || []).length >= Math.min(group.length, 2) && /resume|\bcv\b|upload/i.test(boxText + ' ' + ((box && box.parentElement && box.parentElement.innerText) || '').slice(0, 400))) {
+        if (!group.some(g => g.checked)) { try { group[0].click(); } catch (e) {} }
+        continue;
+      }
+    }
     const id = String(n++);
     if (type === 'checkbox' && group.length === 1) {
       if (el.parentElement && [...el.parentElement.children].some(c => c.tagName === 'BUTTON' && /^(yes|no)$/i.test(textOf(c)))) continue;

@@ -53,10 +53,17 @@ def location_for_search(location: str) -> str:
 
 def linkedin_search_url(keywords: str, location: str = "", easy_apply: bool = False, date_posted: str = "", experience: list[str] = (),
                         job_type: list[str] = (), on_site: list[str] = (), sort_by: str = "", under_10_applicants: bool = False,
-                        in_your_network: bool = False, fair_chance: bool = False, page: int = 0) -> str:
-    '''The LinkedIn job search address with every filter set in it. `page` 0 is the first page of 25 jobs.'''
-    params = [("keywords", keywords)]
+                        in_your_network: bool = False, fair_chance: bool = False, page: int = 0, plain_words: bool = False) -> str:
+    '''
+    The LinkedIn job search address with every filter set in it. `page` 0 is the first page of 25 jobs.
+    `plain_words`: LinkedIn's 2026 search ignores location / level in the address, they go in the words: "Python Developer entry level jobs in India".
+    '''
     place = location_for_search(location)
+    words = keywords
+    if plain_words:
+        if experience and all(level in ("Internship", "Entry level") for level in experience): words += " entry level"
+        if place: words += f" jobs in {place}"
+    params = [("keywords", words)]
     if place: params.append(("location", place))
     if easy_apply: params.append(("f_AL", "true"))
     if date_posted in DATE_CODES: params.append(("f_TPR", DATE_CODES[date_posted]))
@@ -68,7 +75,7 @@ def linkedin_search_url(keywords: str, location: str = "", easy_apply: bool = Fa
     if in_your_network: params.append(("f_JIYN", "true"))
     if fair_chance: params.append(("f_FCE", "true"))
     if page > 0: params.append(("start", str(page * JOBS_PER_PAGE)))
-    return "https://www.linkedin.com/jobs/search/?" + urlencode(params, quote_via=quote)
+    return ("https://www.linkedin.com/jobs/search-results/?" if plain_words else "https://www.linkedin.com/jobs/search/?") + urlencode(params, quote_via=quote)
 
 
 def with_page(url: str, page: int) -> str:

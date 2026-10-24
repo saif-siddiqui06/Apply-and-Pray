@@ -224,7 +224,7 @@ def get_job_main_details(job: WebElement, blacklisted_companies: set, rejected_j
     '''
     global quick_skip_count
     skip = False
-    job_id = job.get_dom_attribute('data-occludable-job-id')
+    job_id = card_job_id(job)
     # 1. Job handled before: decided from its ID alone, before even scrolling to the card (most cards end here)
     id_reason = (job_history.skip_reason_by_id(job_id) if job_history else None) or ("rejected earlier in this run" if job_id in rejected_jobs else None)
     if id_reason:
@@ -234,20 +234,30 @@ def get_job_main_details(job: WebElement, blacklisted_companies: set, rejected_j
         return (job_id, "", "", "", "", True)
     # LinkedIn draws only the first ~7 cards of a page; the others are empty placeholders until they are scrolled into view
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", job)
-    try: WebDriverWait(driver, 4, poll_frequency=0.2).until(lambda _: job.find_elements(By.TAG_NAME, 'a'))
-    except TimeoutException: pass
-    job_details_button = job.find_element(By.TAG_NAME, 'a')  # job.find_element(By.CLASS_NAME, "job-card-list__title")  # Problem in India
-    scroll_to_view(driver, job_details_button, True)
-    # `find()` returns -1 when the separator is missing, slicing with it cut off the last letter ("Data Science Inter")
-    title = job_details_button.text.split("\n")[0].strip()
-    # company = job.find_element(By.CLASS_NAME, "job-card-container__primary-description").text
-    # work_location = job.find_element(By.CLASS_NAME, "job-card-container__metadata-item").text
-    other_details = job.find_element(By.CLASS_NAME, 'artdeco-entity-lockup__subtitle').text
-    company, _, work_location = other_details.partition(' · ')
-    company = company.strip()
-    if not work_location:   # Newer job cards show the place on its own line
-        captions = job.find_elements(By.CLASS_NAME, 'artdeco-entity-lockup__caption')
-        work_location = captions[0].text.split("\n")[0] if captions else ""
+    new_layout = is_new_layout_card(job)
+    if new_layout:   # 2026 cards: title, (title again without "(Verified job)"), company, place, ... as lines of text
+        try: WebDriverWait(driver, 4, poll_frequency=0.2).until(lambda _: (job.text or "").strip())
+        except TimeoutException: pass
+        lines = [line.strip() for line in (job.text or "").split("\n") if line.strip() and line.strip() not in ("·", "•")]
+        title = re.sub(r'\s*\(Verified job\)\s*$', '', lines[0]) if lines else ""
+        rest = lines[1:]
+        if rest and (rest[0] == title or lines[0].startswith(rest[0])): rest = rest[1:]
+        company = rest[0] if rest else ""
+        work_location = rest[1] if len(rest) > 1 else ""
+        job_details_button = job
+    else:
+        try: WebDriverWait(driver, 4, poll_frequency=0.2).until(lambda _: job.find_elements(By.TAG_NAME, 'a'))
+        except TimeoutException: pass
+        job_details_button = job.find_element(By.TAG_NAME, 'a')
+        scroll_to_view(driver, job_details_button, True)
+        # `find()` returns -1 when the separator is missing, slicing with it cut off the last letter ("Data Science Inter")
+        title = job_details_button.text.split("\n")[0].strip()
+        other_details = job.find_element(By.CLASS_NAME, 'artdeco-entity-lockup__subtitle').text
+        company, _, work_location = other_details.partition(' · ')
+        company = company.strip()
+        if not work_location:   # Newer job cards show the place on its own line
+            captions = job.find_elements(By.CLASS_NAME, 'artdeco-entity-lockup__caption')
+            work_location = captions[0].text.split("\n")[0] if captions else ""
     work_style = ""
     if '(' in work_location and ')' in work_location:
         work_style = work_location[work_location.rfind('(')+1:work_location.rfind(')')]
@@ -275,6 +285,7 @@ def get_job_main_details(job: WebElement, blacklisted_companies: set, rejected_j
     wait_for_hourly_limit()
     wait_for(delay_before_opening_job)
     if control.stop_requested: return (job_id, title, company, work_location, work_style, True)   # "Stop" clicked meanwhile: no new job
+    if new_layout: return (job_id, title, company, work_location, work_style, skip)   # Opened on its own page by handle_job (the list pane doesn't load details)
     try:
         job_details_button.click()
     except Exception as e:
@@ -343,7 +354,7 @@ def get_job_description(
     skipMessage = None
     try:
         found_masters = 0
-        jobDescription = find_by_class(driver, "jobs-box__html-content").text
+        jobDescription = read_job_description()
         jobDescriptionLow = jobDescription.lower()
         for word in bad_words:
             if word.lower() in jobDescriptionLow:
@@ -885,7 +896,9 @@ def find_easy_apply_modal(time: float = 5.0) -> WebElement:
     The Easy Apply form: LinkedIn's popup dialog, or (LinkedIn's newer flow) a separate apply page, then the page's main area is used
     once it shows a Next / Review / Submit button. Raises TimeoutException if neither appears within `time` seconds.
     '''
-    xpaths = ["//div[contains(@class,'jobs-easy-apply-modal')]", "//div[@role='dialog' and .//form]", "//div[@role='dialog' and contains(@class,'artdeco-modal')]"]
+    xpaths = ["//div[contains(@class,'jobs-easy-apply-modal')]", "//div[@role='dialog' and .//form]", "//div[@role='dialog' and contains(@class,'artdeco-modal')]",
+              "//dialog[@open][not(contains(., 'safety reminder'))][.//button[normalize-space()='Next' or normalize-space()='Review' or normalize-space()='Submit application'"
+              " or normalize-space()='Submit' or contains(@aria-label,'next step') or contains(@aria-label,'Submit')]]"]
     def first_match(d):
         for xpath in xpaths:
             for found in d.find_elements(By.XPATH, xpath):
@@ -903,7 +916,7 @@ def find_easy_apply_modal(time: float = 5.0) -> WebElement:
 # Function to check if the Easy Apply form is showing validation errors (Eg: "Please enter a valid answer")
 def modal_has_errors(modal: WebElement) -> bool:
     try:
-        errors = modal.find_elements(By.XPATH, ".//*[contains(@class,'artdeco-inline-feedback--error')]")
+        errors = modal.find_elements(By.XPATH, ".//*[contains(@class,'artdeco-inline-feedback--error')] | .//*[@aria-invalid='true'] | .//*[@role='alert' and normalize-space()]")
         return any(error.is_displayed() for error in errors)
     except Exception: return False
 
@@ -974,6 +987,16 @@ def close_entry_editors(modal: WebElement) -> None:
         sleep(1)
         confirm = [b for b in driver.find_elements(By.XPATH, "//div[@role='alertdialog' or @role='dialog']//button[normalize-space()='Remove' or normalize-space()='Delete' or normalize-space()='Discard']") if b.is_displayed()]
         if confirm: click_button(confirm[-1]); sleep(1)
+
+
+def form_page_signature(modal: WebElement) -> str:
+    '''Identifies the form's current page ("2/4 pages", or its questions), to tell whether Next moved forward.'''
+    try:
+        text = modal.text or ""
+        progress = re.search(r'\d+\s*/\s*\d+\s*pages?|\d+%|\d+ percent complete', text)
+        labels = " | ".join(line.strip() for line in text.split(chr(10))[:40] if line.strip().endswith(("?", "*", ":")))
+        return f"{progress.group(0) if progress else ''} {labels}".strip() or text[:400]
+    except Exception: return ""
 
 
 def save_form_html(modal: WebElement, job_id: str) -> str:
@@ -1082,11 +1105,18 @@ def run_easy_apply(job_id: str, title: str, company: str, work_location: str, de
         kind, button = easy_apply_button(modal)
         if kind is None: continue
         if kind == "submit":
+            if TEST_RUN:   # Test run: everything up to the final Submit, then discard
+                print_lg(f"   TEST RUN: the form is filled up to Submit ({page} page(s)); discarding it, nothing is sent")
+                raise EasyApplyStopped("Test run: stopped at Submit, nothing was sent.", "test")
             submit_easy_apply(modal, button)
             return datetime.now(), questions, resume, uploaded
+        before = form_page_signature(modal)
         click_button(button)
         buffer(click_gap)
-        if modal_has_errors(find_easy_apply_modal(3)):
+        sleep(1)
+        after_modal = find_easy_apply_modal(3)
+        # Stuck: an error shows, or Next didn't move the form forward (LinkedIn's error markers change, the page staying the same doesn't)
+        if modal_has_errors(after_modal) or (before and form_page_signature(after_modal) == before):
             stuck += 1
             if stuck >= max_fill_attempts:
                 skipped = answer_resolver.skipped_this_job()
@@ -1106,9 +1136,9 @@ def discard_job() -> None:
     '''
     for attempt in range(3):
         try:
-            if not driver.find_elements(By.XPATH, "//div[contains(@class,'jobs-easy-apply-modal')] | //div[@role='dialog' and .//form]"): return
+            if not driver.find_elements(By.XPATH, "//div[contains(@class,'jobs-easy-apply-modal')] | //div[@role='dialog' and .//form] | //dialog[@open]"): return
             # Close button first (Escape does nothing while a dropdown inside the form has focus), then Escape as a fallback
-            if not try_xp(driver, "//div[@role='dialog']//button[@aria-label='Dismiss' or contains(@class,'artdeco-modal__dismiss')]"):
+            if not try_xp(driver, "//div[@role='dialog']//button[@aria-label='Dismiss' or contains(@class,'artdeco-modal__dismiss')] | //dialog[@open]//button[@aria-label='Dismiss']"):
                 actions.send_keys(Keys.ESCAPE).perform()
             sleep(1)
             if not try_xp(driver, "//button[@data-control-name='discard_application_confirm_btn'] | //button[.//span[normalize-space(.)='Discard']]"):
@@ -1116,8 +1146,9 @@ def discard_job() -> None:
             sleep(1)
         except Exception as e:
             if session_lost(e): raise
+            if tab_crashed(e): return   # Nothing to close in a dead tab: the search recovers it
             print_lg("Problem while closing the Easy Apply popup:", str(e).splitlines()[0][:200])
-    if driver.find_elements(By.XPATH, "//div[contains(@class,'jobs-easy-apply-modal')] | //div[@role='dialog' and .//form]"):
+    if [d for d in driver.find_elements(By.XPATH, "//div[contains(@class,'jobs-easy-apply-modal')] | //div[@role='dialog' and .//form] | //dialog[@open]") if d.is_displayed()]:
         print_lg("Easy Apply popup is still open after 3 tries, reloading the search page to get rid of it.")
         try: driver.refresh(); sleep(3)
         except Exception: pass
@@ -1128,6 +1159,27 @@ def discard_job() -> None:
 
 
 # True when the browser is gone (closed window, dead session), False for errors that only affect one job or page
+def tab_crashed(error: Exception) -> bool:
+    return "tab crashed" in str(error).lower()
+
+
+def recover_crashed_tab() -> None:
+    '''Chrome's tab died (it happens after many pages): continue in a fresh tab of the same browser, still logged in.'''
+    global linkedIn_tab
+    print_lg("The browser tab crashed, continuing in a new tab.")
+    try:
+        old = driver.current_window_handle
+        driver.switch_to.new_window("tab")
+        new = driver.current_window_handle
+        try:
+            driver.switch_to.window(old); driver.close()
+        except Exception: pass
+        driver.switch_to.window(new)
+        linkedIn_tab = new
+    except Exception as e:
+        print_lg("Couldn't open a new tab:", str(e).splitlines()[0][:150] if str(e) else e)
+
+
 def session_lost(error: Exception) -> bool:
     if isinstance(error, (NoSuchWindowException, InvalidSessionIdException)): return True
     message = str(error).lower()
@@ -1250,6 +1302,85 @@ def stop_easy_apply(reason: str) -> None:
     control.status("LinkedIn stopped Easy Apply, see the log")
 
 
+# Job cards in the list: LinkedIn's older layout (<li data-occludable-job-id>) and its 2026 layout (<div role=button componentkey="job-card-component-ref-<id>">)
+JOB_CARDS = "//li[@data-occludable-job-id] | //*[@role='button' and starts-with(@componentkey,'job-card-component-ref-')]"
+
+
+# All job ids of the page in one go: the 2026 list redraws while it loads, reading cards one by one hit replaced ("stale") cards
+_JOB_IDS_JS = r'''
+return [...document.querySelectorAll('li[data-occludable-job-id], [role=button][componentkey^="job-card-component-ref-"]')]
+  .map(c => c.getAttribute('data-occludable-job-id') || (c.getAttribute('componentkey') || '').replace('job-card-component-ref-', '')).filter(Boolean);
+'''
+
+
+def page_job_ids(settle: float = 1.5) -> list[str]:
+    '''The job ids on the results page, once the list stopped changing.'''
+    ids, end = [], time.time() + 8
+    while time.time() < end:
+        sleep(settle)
+        try: now = list(dict.fromkeys(driver.execute_script(_JOB_IDS_JS) or []))
+        except Exception: now = []
+        if now and now == ids: break
+        ids = now
+    return ids
+
+
+def card_xpath(job_id: str) -> str:
+    return f"//li[@data-occludable-job-id='{job_id}'] | //*[@role='button' and @componentkey='job-card-component-ref-{job_id}']"
+
+
+def card_job_id(card: WebElement) -> str:
+    return card.get_dom_attribute('data-occludable-job-id') or (card.get_dom_attribute('componentkey') or "").replace("job-card-component-ref-", "")
+
+
+def is_new_layout_card(card: WebElement) -> bool:
+    return (card.get_dom_attribute('componentkey') or "").startswith("job-card-component-ref-")
+
+
+_DESCRIPTION_JS = r'''
+const old = document.querySelector('.jobs-box__html-content, .jobs-description__content');
+if (old && (old.innerText || '').trim().length > 40) return old.innerText;
+// 2026 layout: no class names to rely on; the text between "About the job" and the next section
+const text = (document.querySelector('main') || document.body).innerText || '';
+const start = text.search(/about the job/i);
+if (start < 0) return '';
+const rest = text.slice(start + 13);
+const end = rest.search(/\n(about the company|set alert for similar jobs|similar jobs|people also viewed|more jobs|job search faster with premium|looking for talent\?)\s*\n/i);
+return (end > 0 ? rest.slice(0, end) : rest.slice(0, 8000)).trim();
+'''
+
+
+def read_job_description(timeout: float = 8) -> str:
+    '''The open job's description (old and 2026 layouts). Raises when there's none after `timeout` seconds.'''
+    end = time.time() + timeout
+    while True:
+        try: text = driver.execute_script(_DESCRIPTION_JS) or ""
+        except Exception: text = ""
+        if len(text.strip()) > 40: return text.strip()
+        if time.time() >= end: raise NoSuchElementException("No job description on the page")
+        sleep(0.5)
+
+
+_HIRING_TEAM_JS = r'''
+const old = document.querySelector('.hirer-card__hirer-information');
+const box0 = old || [...document.querySelectorAll('h2, h3, span, p')].find(e => e.children.length === 0 && /^meet the hiring team$/i.test((e.textContent || '').trim()));
+let box = box0;
+for (let i = 0; i < 6 && box && !box.querySelector('a[href*="/in/"]'); i++) box = box.parentElement;
+const link = box && box.querySelector('a[href*="/in/"]');
+if (!link) return null;
+const name = ((link.querySelector('span[aria-hidden="true"]') || link).innerText || '').split('\n')[0].replace(/\s*[•·].*$/, '').trim();
+return {link: link.href.split('?')[0], name};
+'''
+
+
+def applied_already_on_page() -> bool:
+    '''The open job says you applied ("Applied 3 days ago", "Application submitted"), in either layout.'''
+    if driver.find_elements(By.CLASS_NAME, "jobs-s-apply__application-link"): return True
+    try: top = ((driver.execute_script("return (document.querySelector('main') || document.body).innerText") or "")[:2500])
+    except Exception: return False
+    return bool(re.search(r'\bApplied \d+ (second|minute|hour|day|week|month)s? ago\b|\bApplication submitted\b|\bApplied on \w+', top))
+
+
 _DETAILS_PANE = "//*[contains(@class,'jobs-search__job-details') or contains(@class,'jobs-details__main-content') or contains(@class,'job-view-layout')]"
 # The open job's apply button. Never the "Easy Apply" search filter above the job list (aria-label "Easy Apply filter."), a job card or a popup.
 _APPLY_BUTTONS = (".//*[(self::button or self::a) and (@id='jobs-apply-button-id' or contains(@class,'jobs-apply-button') or contains(@href,'openSDUIApplyFlow=true')"
@@ -1292,15 +1423,15 @@ def wait_for_job_details(job_id: str, timeout: float = 10) -> bool:
     return job_id in shown_job_ids()
 
 
-def open_job_page(job_id: str) -> None:
+def open_job_page(job_id: str, quiet: bool = False) -> None:
     '''
-    LinkedIn sometimes leaves the job's details pane empty, or draws it in a layout the bot can't read ("Unable to extract job description!",
-    then "No Apply button or link"). The job's own page shows the same details, so it's opened instead. The next job reopens the job list (`back_to_results`).
+    The job's own page. Used for every job in LinkedIn's 2026 layout (its list pane doesn't load the details), and in the older layout
+    when the pane stays empty ("Unable to extract job description!"). The next job reopens the job list (`back_to_results`).
     '''
-    print_lg("   the job's details didn't load in the list, opening the job's own page")
+    if not quiet: print_lg("   the job's details didn't load in the list, opening the job's own page")
     try:
         driver.get(f"https://www.linkedin.com/jobs/view/{job_id}/")
-        WebDriverWait(driver, 12, poll_frequency=0.5).until(lambda d: d.find_elements(By.CLASS_NAME, "jobs-box__html-content") or apply_button(job_id)[0] or job_closed())
+        WebDriverWait(driver, 12, poll_frequency=0.5).until(lambda d: (d.execute_script(_DESCRIPTION_JS) or "").strip() or apply_button(job_id)[0] or job_closed())
         buffer(1)
     except Exception: pass
 
@@ -1309,7 +1440,8 @@ def job_closed() -> bool:
     '''The open job says "No longer accepting applications".'''
     try:
         panes = driver.find_elements(By.XPATH, _DETAILS_PANE)
-        return "no longer accepting applications" in (panes[0].text if panes else "").lower()
+        text = panes[0].text if panes else (driver.execute_script("return (document.querySelector('main') || document.body).innerText") or "")[:3000]
+        return "no longer accepting applications" in text.lower()
     except Exception: return False
 
 
@@ -1319,7 +1451,7 @@ def close_linkedin_dialogs() -> None:
     they block the next click. A popup saying LinkedIn paused Easy Apply stops Easy Apply first.
     '''
     discard_job()
-    for dialog in driver.find_elements(By.XPATH, "//div[@role='dialog' or @role='alertdialog']"):
+    for dialog in driver.find_elements(By.XPATH, "//div[@role='dialog' or @role='alertdialog'] | //dialog[@open]"):
         try:
             if not dialog.is_displayed(): continue
             if apply_mode != "normal" and any(phrase in _plain(dialog.text) for phrase in _EASY_APPLY_PAUSED_TEXTS): stop_easy_apply("paused")
@@ -1371,14 +1503,29 @@ def apply_button(job_id: str = "") -> tuple[str | None, WebElement | None]:
     return None, None
 
 
+easy_apply_skip_reason = ""   # Why the last Easy Apply wasn't started on purpose (Eg: LinkedIn's safety reminder for this employer)
+
+
+def safety_reminder_shown() -> bool:
+    '''LinkedIn's "Job search safety reminder" for some employers, shown instead of the form (only Dismiss / Review job post).'''
+    try: return any(d.is_displayed() and "safety reminder" in (d.text or "").lower() for d in driver.find_elements(By.XPATH, "//dialog[@open] | //div[@role='dialog']"))
+    except Exception: return False
+
+
 def start_easy_apply(button: WebElement) -> bool:
     '''
     Clicks Easy Apply and waits for the form. False if it didn't open. If LinkedIn says you're applying too fast ("we've briefly paused
     Easy Apply") or its daily limit is reached, Easy Apply is stopped for this run (see `stop_easy_apply`).
     '''
+    global easy_apply_skip_reason
+    easy_apply_skip_reason = ""
     click_button(button)
     end = time.time() + 10
     while time.time() < end:
+        if safety_reminder_shown():   # LinkedIn warns about this employer and offers no way to continue: skip the job (it protects you too)
+            easy_apply_skip_reason = "LinkedIn shows a job search safety reminder for this employer"
+            discard_job()
+            return False
         blocked = easy_apply_blocked_by_linkedin()
         if blocked:
             stop_easy_apply(blocked)
@@ -1415,7 +1562,7 @@ def back_to_results(page_url: str) -> None:
     if on_results_page(): return
     print_lg("   back to the job list")
     driver.get(page_url)
-    try: wait.until(EC.presence_of_all_elements_located((By.XPATH, "//li[@data-occludable-job-id]")))
+    try: wait.until(EC.presence_of_all_elements_located((By.XPATH, JOB_CARDS)))
     except Exception: pass
     buffer(1)
 
@@ -1435,9 +1582,9 @@ def handle_job(listing_id: str, state: RunState, page_url: str) -> str:
             if attempt == 1: sleep(1)
             if attempt == 2:
                 driver.get(page_url)
-                wait.until(EC.presence_of_all_elements_located((By.XPATH, "//li[@data-occludable-job-id]")))
+                wait.until(EC.presence_of_all_elements_located((By.XPATH, JOB_CARDS)))
                 buffer(1)
-            cards = driver.find_elements(By.XPATH, f"//li[@data-occludable-job-id='{listing_id}']")
+            cards = driver.find_elements(By.XPATH, card_xpath(listing_id))
             if not cards:
                 if attempt < 2: continue
                 print_lg(f"Job {listing_id} is no longer in the list, skipping it.")
@@ -1457,7 +1604,9 @@ def handle_job(listing_id: str, state: RunState, page_url: str) -> str:
                 return "list-skip"
     if skip: return "list-skip"
     if dailyEasyApplyLimitReached: return "stop"
-    if not wait_for_job_details(job_id):   # The pane still shows the previous job: click once more
+    if "/jobs/search-results/" in driver.current_url or not driver.find_elements(By.XPATH, f"//li[@data-occludable-job-id='{job_id}']"):
+        open_job_page(job_id, quiet=True)   # LinkedIn's 2026 layout: the job's own page has its description and Apply button
+    elif not wait_for_job_details(job_id):   # The pane still shows the previous job: click once more
         try: click_button(driver.find_element(By.XPATH, f"//li[@data-occludable-job-id='{job_id}']//a"))
         except Exception: pass
         if not wait_for_job_details(job_id):
@@ -1465,7 +1614,7 @@ def handle_job(listing_id: str, state: RunState, page_url: str) -> str:
             failed_job(job_id, "https://www.linkedin.com/jobs/view/" + job_id, "Pending", "Unknown", "Job details didn't load", "The details pane kept showing another job", "Unknown", "Not Available")
             failed_count += 1
             return "failed"
-    if job_id in state.applied_ids or driver.find_elements(By.CLASS_NAME, "jobs-s-apply__application-link"):
+    if job_id in state.applied_ids or applied_already_on_page():
         print_lg(f'Already applied to "{title} | {company}". Job ID: {job_id}')
         return "list-skip"
 
@@ -1500,10 +1649,9 @@ def handle_job(listing_id: str, state: RunState, page_url: str) -> str:
         return "skipped"
 
     # Details for the excel, only what's already on the page (no waiting)
-    hr_cards = driver.find_elements(By.CLASS_NAME, "hirer-card__hirer-information")
-    try:
-        hr_link = hr_cards[0].find_element(By.TAG_NAME, "a").get_attribute("href") if hr_cards else ""
-        hr_name = hr_cards[0].find_element(By.TAG_NAME, "span").text if hr_cards else ""
+    try:   # "Meet the hiring team" (both layouts): the person Networking connects you with later
+        hirer = driver.execute_script(_HIRING_TEAM_JS) or {}
+        hr_link, hr_name = hirer.get("link", ""), hirer.get("name", "")
     except Exception: hr_link, hr_name = "", ""
     try:
         posted = jobs_top_card.find_element(By.XPATH, './/span[contains(normalize-space(), " ago")]').text
@@ -1541,6 +1689,12 @@ def handle_job(listing_id: str, state: RunState, page_url: str) -> str:
                 failed_job(job_id, job_link, resume, date_listed, "Easy Apply paused by LinkedIn", easy_apply_stopped, application_link, screenshot_name)
                 pending_links.add(job_id, title, company, "Easy Apply paused by LinkedIn", job_link, job_link)
                 return "stop" if dailyEasyApplyLimitReached else "skipped"
+            if easy_apply_skip_reason:
+                print_lg(f"   skipped: {easy_apply_skip_reason}")
+                failed_job(job_id, job_link, resume, date_listed, "Employer flagged by LinkedIn", easy_apply_skip_reason, application_link, screenshot_name)
+                skip_count += 1
+                skip_reasons["LinkedIn safety reminder"] += 1
+                return "skipped"
             print_lg("   the Easy Apply form didn't open")
             failed_job(job_id, job_link, resume, date_listed, "Problem in Easy Applying", "The Easy Apply form didn't open", application_link, screenshot_name)
             failed_count += 1
@@ -1553,9 +1707,13 @@ def handle_job(listing_id: str, state: RunState, page_url: str) -> str:
             if session_lost(e): raise
             kind = e.kind if isinstance(e, EasyApplyStopped) else "error"
             message = str(e).splitlines()[0][:250] if str(e) else type(e).__name__
+            if kind == "test":   # Test run: no record anywhere, so the real run applies to this job normally
+                discard_job()
+                skip_reasons["test run: filled up to Submit"] += 1
+                return "skipped"
             print_lg(f'   Easy Apply stopped: {message}')
             if not isinstance(e, EasyApplyStopped): critical_error_log("Somewhere in Easy Apply process", e)
-            failed_job(job_id, job_link, resume, date_listed, {"discarded": "Discarded by you", "skipped": "Skipped by you", "blocked": "Easy Apply paused by LinkedIn"}.get(kind, "Problem in Easy Applying"), message, application_link, screenshot_name)
+            failed_job(job_id, job_link, resume, date_listed, {"discarded": "Discarded by you", "skipped": "Skipped by you", "blocked": "Easy Apply paused by LinkedIn", "test": "Test run"}.get(kind, "Problem in Easy Applying"), message, application_link, screenshot_name)
             failed_count += kind == "error"
             if kind != "discarded": pending_links.add(job_id, title, company, f"Easy Apply: {message}", job_link, job_link)
             discard_job()
@@ -1584,6 +1742,9 @@ def handle_job(listing_id: str, state: RunState, page_url: str) -> str:
                 date_applied = datetime.now()
                 resume = os.path.basename(normal_applier.resume_path) if normal_applier.resume_path else "Not uploaded"
                 normal_applied = True
+            elif outcome.status == "discarded" and TEST_RUN:   # Test run: no record, the real run applies normally
+                skip_reasons["test run: filled up to Submit"] += 1
+                return "skipped"
             elif outcome.status == "discarded":
                 print_lg("   you chose not to submit it")
                 failed_job(job_id, job_link, resume, date_listed, "Discarded by you", outcome.message, application_link, outcome.screenshot)
@@ -1639,6 +1800,16 @@ def go_through_search(search: str, state: RunState) -> None:
     print_lg(f'\n{"_" * 100}\n>>>> Searching for: {search} <<<<\n{first_page}\n')
     control.status(f"Searching: {search}")
     driver.get(first_page)
+    try: WebDriverWait(driver, 10, poll_frequency=0.5).until(lambda d: d.find_elements(By.XPATH, JOB_CARDS))
+    except TimeoutException: pass
+    sleep(2)   # LinkedIn may still be redirecting to its new search page
+    new_search = "/jobs/search-results/" in driver.current_url or driver.find_elements(By.XPATH, "//*[@role='button' and starts-with(@componentkey,'job-card-component-ref-')]")
+    if new_search:   # LinkedIn's 2026 search: location and level go in the words ("... jobs in India")
+        first_page = linkedin_search_url(search, search_location, easy_apply=(apply_mode == "easy"), date_posted=date_posted, experience=experience_level,
+                                         job_type=job_type, on_site=on_site, sort_by=sort_by, under_10_applicants=under_10_applicants,
+                                         in_your_network=in_your_network, fair_chance=fair_chance_employer, plain_words=True)
+        print_lg(f"LinkedIn's new job search: {first_page}")
+        driver.get(first_page)
     if companies or location or industry or job_function or job_titles or benefits or commitments or salary:
         apply_extra_filters()
         first_page = with_page(driver.current_url, 0)   # LinkedIn adds those filters to the address, keep them for the next pages
@@ -1650,12 +1821,11 @@ def go_through_search(search: str, state: RunState) -> None:
             print_lg(f"\n>-> Page {page + 1}\n")
             driver.get(page_url)
         try:
-            wait.until(EC.presence_of_all_elements_located((By.XPATH, "//li[@data-occludable-job-id]")))
+            wait.until(EC.presence_of_all_elements_located((By.XPATH, JOB_CARDS)))
         except TimeoutException:
             print_lg(">-> No more jobs." if page else f'LinkedIn found no jobs for "{search}" with these filters.')
             return
-        buffer(2)
-        listing_ids = [card.get_dom_attribute('data-occludable-job-id') for card in driver.find_elements(By.XPATH, "//li[@data-occludable-job-id]")]
+        listing_ids = page_job_ids()
         new_on_page = 0
         for listing_id in listing_ids:
             # Control window: wait while paused, stop / quit if asked. A "Skip" clicked between jobs is ignored.
@@ -1705,6 +1875,9 @@ def apply_to_jobs(search_terms: list[str]) -> None:
         except TimeoutException:
             print_lg(f"LinkedIn found no jobs for {search} with these filters.")
         except WebDriverException as e:
+            if tab_crashed(e):
+                recover_crashed_tab()
+                continue
             if session_lost(e):
                 print_lg("Browser window closed or session is invalid. Ending application process.", str(e).splitlines()[0][:200])
                 raise
@@ -1751,6 +1924,7 @@ def choose_apply_mode() -> None:
 
 
 feed_counts: dict = {}   # Feed jobs results, for the summary
+TEST_RUN = os.environ.get("APPLY_AND_PRAY_TEST_RUN") == "1"   # Fill everything, never press the final Submit (dashboard: "Test run")
 
 
 def ai_write_text(instruction: str, source_text: str, role: str = "") -> str | None:
@@ -1795,6 +1969,9 @@ def run_connections() -> None:
 def confirm_normal_submit(job: str) -> bool:
     '''"Pause before submit" for Normal Apply. Returns False if the user chose to discard.'''
     global pause_before_submit
+    if TEST_RUN:
+        print_lg(f"   TEST RUN: {job} filled up to Submit; not sending it")
+        return False
     if not pause_before_submit:
         wait_for(delay_before_submit, in_application=True, count=False)
         return True
