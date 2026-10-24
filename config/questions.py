@@ -98,6 +98,13 @@ User Information
 Note: If left empty as "", the tool will not answer the question. However, note that some companies make it compulsory to be answered. Use \n to add line breaks.
 ''' 
 
+## Education (asked by many Indian job forms). "" to leave a question for the AI / popup
+highest_degree = ""                # Eg: "B.Tech in Computer Science"
+graduation_year = ""               # Eg: "2026" (expected year if you're still studying)
+cgpa = ""                          # Eg: "8.2" (out of 10)
+percentage_12th = ""               # Eg: "85"
+percentage_10th = ""               # Eg: "90"
+
 # Name of your most recent employer
 recent_employer = "" # "", "Lala Company", "Google", "Snowflake", "Databricks"
 

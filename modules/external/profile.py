@@ -8,6 +8,7 @@ import re
 
 from config.personals import first_name, middle_name, last_name, phone_number, current_city, street, state, zipcode, country, gender, ethnicity, disability_status, veteran_status
 from config.questions import years_of_experience, require_visa, website, linkedIn, desired_salary, current_ctc, notice_period, linkedin_headline, linkedin_summary, cover_letter, recent_employer
+from config import questions as _questions   # Education answers (newer settings, read with getattr so older configs still work)
 from config.secrets import username as linkedin_login_email
 from modules.answer_store import match_option
 
@@ -140,6 +141,14 @@ def profile_answer(field: dict, resume_path: str | None = None, job_location: st
         if re.search(r'\b(current|present)\b', label): return _salary(label, current_ctc)
         return _salary(label, desired_salary)
     if "sponsorship" in label or re.search(r'\bvisa\b', label): return require_visa
+
+    # Education
+    edu = lambda name: (str(getattr(_questions, name, "") or "").strip() or None) if not yes_no_question else None   # "Is your CGPA above 7?" is a Yes / No
+    if re.search(r'(10th|\bx\b|class 10|ssc|matric|secondary school).{0,40}(percent|%|marks|score|cgpa|grade)|percentage in 10', text): return edu("percentage_10th")
+    if re.search(r'(12th|\bxii\b|class 12|hsc|higher secondary|intermediate|puc).{0,40}(percent|%|marks|score|cgpa|grade)|percentage in 12', text): return edu("percentage_12th")
+    if re.search(r'\b(c?gpa|grade point|cumulative grade)\b', text) and not re.search(r'10th|12th|class', text): return edu("cgpa")
+    if re.search(r'(graduat\w*|passing|pass.?out|completion).{0,25}year|year\b.{0,20}(graduat|pass)|year of (graduation|passing|completion)|\bbatch\b', text): return edu("graduation_year")
+    if not yes_no_question and re.search(r'highest (degree|qualification|education)|^(degree|qualification|education)$|educational qualification', label): return edu("highest_degree")
 
     # Voluntary self-identification
     if re.search(r'\bgender\b|\bsex\b', label) and "orientation" not in label: return gender or None
