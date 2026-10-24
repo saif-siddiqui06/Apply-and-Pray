@@ -204,6 +204,13 @@ def fallback_answer(field: dict, options: list[str] | None = None, job_location:
         return pick("Yes", "I agree", "Agree", "Acknowledge", "I acknowledge", "Confirm", "I confirm", "Accept", "I accept", "I understand", "I have read")
     if _WILLING.search(label) or (options and _WILLING_CHOICE.search(label)):
         return pick("Yes", "I am", "I'm", "Sure", "Definitely")
+    # Freshers: no previous employer; nobody applying here worked for this company / a government before (asked as Yes / No)
+    if re.search(r'(most recent|current|present|previous|last) (company|employer|organi[sz]ation|job)|recently worked|where (do|did) you (currently )?work', label):
+        if str(years_of_experience).strip() in ("0", "") and not (recent_employer or "").strip():
+            return pick("Fresher", "None", "Not applicable", "N/A") if options else "Fresher (no previous employer)"
+        return pick(recent_employer) if (options and recent_employer) else (recent_employer or None)
+    if re.search(r'have you (ever )?(previously )?(worked|been employed|been an employee|interned) (at|for|with|by)|(directly )?employed by .{0,40}government|former employee', label):
+        return pick("No", "I have not", "Never")
     if re.search(r'\b(nationality|citizenship)\b', label) and country:
         demonym = _DEMONYMS.get(country.strip().lower(), "")
         if not options: return demonym or country

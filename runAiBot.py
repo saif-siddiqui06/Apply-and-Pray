@@ -785,7 +785,9 @@ def open_external_link(button: WebElement) -> str | None:
     before = set(driver.window_handles)
     try:
         click_button(button)
-        wait_span_click(driver, "Continue", 1, True, False)   # LinkedIn's "Share your profile?" notice
+        sleep(1)
+        notice = [b for b in driver.find_elements(By.XPATH, '//span[normalize-space(.)="Continue"]') if b.is_displayed()]   # LinkedIn's "Share your profile?" notice
+        if notice: click_button(notice[0])
         end = time.time() + 8
         while time.time() < end and len(driver.window_handles) <= len(before): sleep(0.5)
         opened = [handle for handle in driver.window_handles if handle not in before]
@@ -826,6 +828,9 @@ def failed_job(job_id: str, job_link: str, resume: str, date_listed, error: str,
     '''
     Function to update failed jobs list in excel
     '''
+    if TEST_RUN:   # Test run: nothing is recorded, the real run treats this job as new
+        print_lg(f"   (test run, not recorded: {error})")
+        return
     if job_history: job_history.record_failed(job_id, error)   # Errors are tried again later (up to 2 times), jobs that don't fit you never
     try:
         with open(failed_file_name, 'a', newline='', encoding='utf-8') as file:
@@ -863,6 +868,7 @@ def submitted_jobs(job_id: str, title: str, company: str, work_location: str, wo
     '''
     Function to create or update the Applied jobs CSV file, once the application is submitted successfully
     '''
+    if TEST_RUN: return   # Test run: nothing is recorded
     if job_history: job_history.record_applied(job_id, company, title, applied=isinstance(date_applied, datetime))
     try:
         with open(file_name, mode='a', newline='', encoding='utf-8') as csv_file:
@@ -1924,7 +1930,7 @@ def choose_apply_mode() -> None:
 
 
 feed_counts: dict = {}   # Feed jobs results, for the summary
-TEST_RUN = os.environ.get("APPLY_AND_PRAY_TEST_RUN") == "1"   # Fill everything, never press the final Submit (dashboard: "Test run")
+from modules.runtime import TEST_RUN   # Fill everything, never press the final Submit, record nothing (dashboard: "Test run")
 
 
 def ai_write_text(instruction: str, source_text: str, role: str = "") -> str | None:
@@ -1946,8 +1952,7 @@ def run_feed_jobs() -> None:
     '''Feed jobs mode: jobs posted as LinkedIn posts (see modules/feed_jobs.py).'''
     global feed_counts
     from modules.feed_jobs import FeedJobs
-    terms = list(search_terms)
-    if randomize_search_order: random.shuffle(terms)
+    terms = plan_searches(search_terms, randomize_search_order)   # "Python Developer Intern" is covered by "Python Developer"
     print_lg(f"Feed jobs: searching posts for {terms}")
     feed = FeedJobs(driver, control=control, normal_applier=normal_applier,
                     resume_path=default_resume_path if os.path.exists(default_resume_path) else None,
@@ -2046,7 +2051,7 @@ def main() -> None:
                                            screenshot=lambda job_id, reason: screenshot(driver, job_id, reason), close_tabs=close_tabs,
                                            max_fill_attempts=max_fill_attempts, portal_email=account_email, portal_password=portal_password,
                                            accounts=AccountBook() if portal_password and account_email else None, control=control,
-                                           failed_forms_file=os.path.join(os.path.dirname(file_name) or "all excels", "failed_forms.json"))
+                                           failed_forms_file=None if TEST_RUN else os.path.join(os.path.dirname(file_name) or "all excels", "failed_forms.json"))
 
         # Everything the AI may use about you: config details + resume text
         ai_profile_text = user_profile_text(default_resume_path)
@@ -2130,14 +2135,14 @@ def main() -> None:
             timeSavedMsg = f"In this run, you saved approx {round(timeSaved/60)} mins ({timeSaved} secs), if it helped, star the project on GitHub."
         msg = f"{quotes}\n\n\n{timeSavedMsg}\nProject, help and bug reports: https://github.com/saif-siddiqui06/Apply-and-Pray\n\n\nSummary:\n{summary}\n\n\nBest regards,\nShubham\nhttps://www.linkedin.com/in/shubham-sunil-kumar-333547133/\n\nTop Sponsors:\n{sponsors}"
         print_lg("\n" + "#" * 60 + "\n" + summary + "#" * 60)   # Once in the log; the popup below shows the same summary
-        pyautogui.alert(msg, "Exiting..")
+        if not os.environ.get("APPLY_AND_PRAY_DASHBOARD"): pyautogui.alert(msg, "Exiting..")   # From the dashboard: the summary shows on its Run page, nobody would close this
         print_lg("Closing the browser...")
         if pending_links.added_this_run:
             print_lg(f"{pending_links.added_this_run} new jobs to apply by hand: {os.path.abspath(pending_links.html_path)}")
             if open_apply_by_hand_page: pending_links.open_page()
         if tabs_count >= 10:
             msg = "NOTE: IF YOU HAVE MORE THAN 10 TABS OPENED, PLEASE CLOSE OR BOOKMARK THEM!\n\nOr it's highly likely that application will just open browser and not do anything next time!" 
-            pyautogui.alert(msg,"Info")
+            if not os.environ.get("APPLY_AND_PRAY_DASHBOARD"): pyautogui.alert(msg,"Info")
             print_lg("\n"+msg)
         if use_AI and aiClient:
             try:

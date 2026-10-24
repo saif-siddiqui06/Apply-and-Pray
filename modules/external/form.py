@@ -56,11 +56,25 @@ function optionText(el) {
   const al = el.getAttribute('aria-label'); if (al) return clean(al);
   const wrap = el.closest('label'); if (wrap) { const t = textOf(wrap); if (t) return t; }
   const next = el.nextElementSibling; if (next) { const t = textOf(next); if (t) return t; }
+  // LinkedIn 2026: <div role=radio aria-label="question"><input><label></label></div><p>Yes</p> - the option is the text of its own box
+  const box = el.closest('[role=radio]') || (el.parentElement && el.parentElement.parentElement);
+  if (box) { const t = textOf(box); if (t) return t; }
   return clean(el.value);
 }
 
 // Question text of a radio / checkbox / button group: <legend>, role=group label, or the nearest label that isn't an option
 function groupLabel(container, members) {
+  // LinkedIn 2026: each option is <div role=radio aria-label="the question">, the question also stands just before the group
+  for (const m of members) {
+    const r = m.getAttribute('role') === 'radio' ? m : m.closest('[role=radio]');
+    const al = r && r.getAttribute('aria-label');
+    if (al && !members.some(o => clean(o.value || '') === clean(al))) return clean(al);
+  }
+  const holder = container.closest('fieldset, [role=radiogroup]');
+  if (holder && !holder.querySelector('legend')) {
+    const before = holder.previousElementSibling;
+    if (before && !before.querySelector('input, select, textarea')) { const t = textOf(before); if (t && t.length < 300) return t; }
+  }
   const fs = container.closest('fieldset');
   if (fs) {
     const lg = fs.querySelector('legend'); if (lg && textOf(lg)) return textOf(lg);
@@ -85,6 +99,8 @@ function groupLabel(container, members) {
 
 function isRequired(el, label) {
   if (el.required || el.getAttribute('aria-required') === 'true') return true;
+  const holder = el.closest('fieldset, [role=radiogroup]');   // LinkedIn 2026: "Question*" stands just before the group
+  if (holder && holder.previousElementSibling && /[*✱]\s*$/.test(textOf(holder.previousElementSibling))) return true;
   const item = el.closest('[role=listitem]');   // Google Forms marks required questions with a "Required question" star
   if (item && item.querySelector('[aria-label="Required question"]')) return true;
   if (/\*\s*$/.test(label || '') || /✱/.test(label || '') || /\(required\)/i.test(label || '')) return true;
@@ -213,6 +229,7 @@ for (const lb of root.querySelectorAll('[role=listbox]')) {
 for (const group of root.querySelectorAll('[role=radiogroup]')) {
   const radios = [...group.querySelectorAll('[role=radio]')].filter(r => r.tagName !== 'INPUT');
   if (!radios.length || !radios.some(visible)) continue;
+  if (group.querySelector('input[type=radio]')) continue;   // Real radio inputs inside: read (or deliberately skipped, Eg: a resume picker) above
   const id = String(n++);
   radios.forEach((r, i) => r.setAttribute(MARK, id + '-' + i));
   const label = ariaLabel(group) || groupLabel(group, radios);

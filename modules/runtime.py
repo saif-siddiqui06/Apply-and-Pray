@@ -12,6 +12,7 @@ import os
 import sys
 
 FROZEN = bool(getattr(sys, "frozen", False))
+TEST_RUN = os.environ.get("APPLY_AND_PRAY_TEST_RUN") == "1"   # Fill everything, send nothing, record nothing (dashboard: "Test run")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUNDLE_DIR = getattr(sys, "_MEIPASS", PROJECT_DIR) if FROZEN else PROJECT_DIR
 

@@ -33,7 +33,8 @@ class PendingLinks:
 
     def add(self, job_id: str, title: str, company: str, reason: str, apply_link: str, linkedin_link: str) -> None:
         '''Saves one job (once per Job ID) and refreshes the html page.'''
-        if not job_id or job_id in self._ids: return
+        from modules.runtime import TEST_RUN
+        if TEST_RUN or not job_id or job_id in self._ids: return   # Test run: nothing is recorded
         if not apply_link or apply_link in ("Easy Applied", "about:blank"): apply_link = linkedin_link
         try:
             os.makedirs(os.path.dirname(self.csv_path) or ".", exist_ok=True)

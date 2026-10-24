@@ -19,6 +19,7 @@ from contextlib import contextmanager
 from datetime import datetime
 
 from modules.user_settings import user_path
+from modules.runtime import TEST_RUN
 
 DB_FILE = user_path("app.db")
 
@@ -145,6 +146,7 @@ def record_application(job_id: str, title: str, company: str, method: str, statu
                        job_link: str = "", apply_link: str = "", hr_name: str = "", hr_link: str = "", resume: str = "", date_posted="",
                        applied_at="", experience_required="", skills="", description: str = "", questions="") -> None:
     '''Adds a job, or updates it (Eg: a saved link you applied to later).'''
+    if TEST_RUN: return None   # Test run: nothing is recorded
     with session() as connection:
         connection.execute('''
             INSERT INTO applications (job_id, title, company, location, work_style, method, status, job_link, apply_link, hr_name, hr_link,
@@ -159,12 +161,14 @@ def record_application(job_id: str, title: str, company: str, method: str, statu
 
 
 def record_failure(job_id: str, job_link: str, reason: str, details="", apply_link: str = "", screenshot: str = "", tried_at=None) -> None:
+    if TEST_RUN: return None   # Test run: nothing is recorded
     with session() as connection:
         connection.execute("INSERT OR IGNORE INTO failures (job_id, job_link, reason, details, apply_link, screenshot, tried_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
                            (_text(job_id), _text(job_link), _text(reason), _text(details)[:4000], _text(apply_link), _text(screenshot), _text(tried_at) or _now()))
 
 
 def record_apply_by_hand(job_id: str, title: str, company: str, reason: str, apply_link: str, job_link: str, added_at=None) -> None:
+    if TEST_RUN: return None   # Test run: nothing is recorded
     with session() as connection:
         connection.execute("INSERT OR IGNORE INTO apply_by_hand (job_id, title, company, reason, apply_link, job_link, added_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
                            (_text(job_id), _text(title), _text(company), _text(reason), _text(apply_link), _text(job_link), _text(added_at) or _now()))
@@ -230,6 +234,7 @@ def apply_by_hand_list(include_done: bool = False) -> list[dict]:
 
 def mark_applied(job_id: str) -> bool:
     '''You applied to a saved link yourself.'''
+    if TEST_RUN: return False   # Test run: nothing is recorded
     with session() as connection:
         now = _now()
         changed = connection.execute("UPDATE applications SET status = 'applied', applied_at = ? WHERE job_id = ? AND status != 'applied'", (now, job_id)).rowcount
@@ -261,6 +266,7 @@ def post_seen(urn: str) -> bool:
 
 
 def record_post(post: dict, action: str, detail: str = "", role: str = "", apply_link: str = "", found_with: str = "") -> None:
+    if TEST_RUN: return None   # Test run: nothing is recorded
     import json
     with session() as connection:
         connection.execute('''
@@ -282,6 +288,7 @@ def feed_posts(limit: int = 200) -> list[dict]:
 def queue_message(kind: str, to_address: str, *, to_name: str = "", subject: str = "", body: str = "", attachment: str = "",
                   role_key: str = "", source: str = "", status: str = "draft") -> int | None:
     '''Adds a message. Returns its id, or None if this person already has one for this role (never contacted twice).'''
+    if TEST_RUN: return None   # Test run: nothing is recorded
     with session() as connection:
         cursor = connection.execute('''
             INSERT OR IGNORE INTO outbox (kind, status, to_address, to_name, subject, body, attachment, role_key, source, created_at)
@@ -306,6 +313,7 @@ def outbox_item(item_id: int) -> dict | None:
 
 
 def update_outbox(item_id: int, **fields) -> None:
+    if TEST_RUN: return None   # Test run: nothing is recorded
     allowed = {key: value for key, value in fields.items() if key in ("status", "subject", "body", "error", "sent_at")}
     if not allowed: return
     with session() as connection:
@@ -335,6 +343,7 @@ def person(profile_url: str) -> dict | None:
 def add_person(profile_url: str, *, name: str = "", headline: str = "", company: str = "", role: str = "", job_link: str = "",
                source: str = "", priority: int = 5, status: str = "invite_drafted") -> bool:
     '''Adds someone once. False if they're already known (never contacted twice).'''
+    if TEST_RUN: return False   # Test run: nothing is recorded
     with session() as connection:
         cursor = connection.execute('''INSERT OR IGNORE INTO people (profile_url, name, headline, company, role, job_link, source, priority, status, created_at)
                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
@@ -343,6 +352,7 @@ def add_person(profile_url: str, *, name: str = "", headline: str = "", company:
 
 
 def update_person(profile_url: str, **fields) -> None:
+    if TEST_RUN: return None   # Test run: nothing is recorded
     allowed = {key: value for key, value in fields.items()
                if key in ("name", "headline", "company", "status", "detail", "invited_at", "connected_at", "last_message_at", "follow_ups")}
     if not allowed: return
@@ -362,6 +372,7 @@ def search_done(key: str) -> bool:
 
 
 def record_search(key: str, found: int) -> None:
+    if TEST_RUN: return None   # Test run: nothing is recorded
     with session() as connection: connection.execute("INSERT OR REPLACE INTO searches (key, found, done_at) VALUES (?, ?, ?)", (key, found, _now()))
 
 

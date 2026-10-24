@@ -72,6 +72,11 @@ def link_score(url: str) -> int:
     return 1 if APPLY_PATH_RE.search(urllib.parse.urlparse(lower).path + "?" + urllib.parse.urlparse(lower).query) else 0
 
 
+JOB_WORD = re.compile(r'engineer|developer|analyst|scientist|intern|designer|manager|consultant|specialist|architect|administrator|associate|executive|'
+                      r'lead|tester|\bqa\b|devops|programmer|researcher|officer|trainee|apprentice|fresher|graduate|coordinator|technician|writer|marketer|'
+                      r'accountant|recruiter|support|operator|full.?stack|front.?end|back.?end|data|python|java|sde\b|ml\b|ai\b', re.I)
+
+
 def role_of(text: str, fallback: str) -> str:
     '''The job title the post is about, else `fallback` (the title it was found with).'''
     text = plain(text)
@@ -80,10 +85,12 @@ def role_of(text: str, fallback: str) -> str:
     for match in ROLE_LINE_RE.finditer(text or ""):
         role = tidy(match.group(1))
         if role.isupper(): role = role.title()   # "PYTHON DEVELOPER" -> "Python Developer"
+        if not JOB_WORD.search(role) or "$" in role: continue   # "ALERT", "$100/hr", "Motivated": not a job title
         if 2 < len(role) <= 70 and not EMAIL_RE.search(role) and "http" not in role and not re.search(r'(?i)^(now|alert|update|drive)$|immediate|joiners?\b|required|urgent|opportunit|walk-?in', role): return role
     for match in ROLE_PHRASE_RE.finditer(text or ""):
         role = tidy(match.group(1))
         words = role.lower().split()
+        if not JOB_WORD.search(role) or "$" in role or words[:1] == ["at"]: continue
         if words and words[0] not in ("you", "your", "someone", "people", "candidates", "talent", "talented", "passionate", "the", "our", "a", "an", "folks") and len(words) <= 7:
             return role.title() if role.islower() else role
     return fallback
@@ -293,7 +300,9 @@ class FeedJobs:
 
 
     def _search_url(self, term: str) -> str:
-        query = f"{term} {self.feed.hiring_words}".strip()
+        from modules.smart_search import location_for_search
+        place = location_for_search(self.search.search_location) if getattr(self.feed, "add_location_to_search", True) else ""
+        query = " ".join(part for part in (term, self.feed.hiring_words, place) if part).strip()   # Eg: "Python Developer hiring India"
         date = DATE_FILTERS.get(self.feed.date_posted, "past-week")
         return ("https://www.linkedin.com/search/results/content/?keywords=" + urllib.parse.quote(query)
                 + f"&datePosted=%22{date}%22&sortBy=%22date_posted%22&origin=FACETED_SEARCH")
@@ -436,6 +445,11 @@ class FeedJobs:
         to, role = decision["emails"][0], decision["role"]
         subject = f"Application for {role} - {self.name}".strip(" -")
         body = self._write_email(post, role)
+        from modules.runtime import TEST_RUN
+        if TEST_RUN:
+            print_lg(f"   TEST RUN: would write an email to {to}: {subject} ({len(body.split())} words). Not saved, not sent.")
+            self.counts["emails_drafted"] += 1
+            return "email_drafted"
         attachment = self.resume_path or ""
         review = bool(self.gmail.review_before_send) or not self.gmail.gmail_address
         item = db.queue_message("email", to, to_name=post.get("author", ""), subject=subject, body=body, attachment=attachment,

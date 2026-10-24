@@ -229,9 +229,12 @@ class NormalApplier:
         except Exception: return ""
 
 
-    @staticmethod
-    def _fillable(fields: list[dict]) -> list[dict]:
-        return [field for field in fields if field["kind"] not in ("file", "password")]
+    # Page widgets that aren't an application: chat windows, "save job" / "add to cart" boxes, cookie settings
+    _NOT_A_QUESTION = re.compile(r'chatbot|chat window|chat input|type (your )?message|message box|send button|add to cart|save (this )?job|bookmark|cookie', re.I)
+
+    @classmethod
+    def _fillable(cls, fields: list[dict]) -> list[dict]:
+        return [field for field in fields if field["kind"] not in ("file", "password") and not cls._NOT_A_QUESTION.search(field["label"] or "")]
 
 
     def _is_form(self, fields: list[dict], site: str) -> bool:

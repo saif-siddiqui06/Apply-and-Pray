@@ -14,6 +14,9 @@ Your experience, bad words and blacklisted companies (config/search.py) apply to
 # Added to each job title when searching posts, Eg: "Data Analyst hiring"
 hiring_words = "hiring"
 
+# Add your country (from `search_location`) to the post search, so posts from other countries are mostly left out
+add_location_to_search = True
+
 # Only posts from this period
 date_posted = "past-week"               # "past-24h", "past-week" or "past-month"
 
