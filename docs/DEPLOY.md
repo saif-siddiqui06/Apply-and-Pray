@@ -19,7 +19,7 @@ The workflow `.github/workflows/pages.yml` publishes `website/` whenever `main` 
 1. Open the repo on GitHub → **Settings** → **Pages** (left menu).
 2. Under **Build and deployment**, set **Source** to **GitHub Actions**. Nothing else to choose.
 3. Go to the **Actions** tab → **Website** (left) → **Run workflow** → **Run workflow** (green button). Wait about 1 minute for the green tick.
-4. Your site is live at **`https://<your-github-username>.github.io/Apply-and-Pray/`**. For this repo: `https://theturkishangorashiro-art.github.io/Apply-and-Pray/`.
+4. Your site is live at **`https://<your-github-username>.github.io/Apply-and-Pray/`**. For this repo: `https://saif-siddiqui06.github.io/Apply-and-Pray/`.
    The address is also shown in Settings → Pages, and on the finished workflow run.
 
 From then on, every push to `main` that changes `website/` republishes it by itself.
