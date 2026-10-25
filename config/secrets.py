@@ -81,6 +81,11 @@ Set `stream_output = True` if you want to stream AI output or `stream_output = F
 gemini_api_key = ""
 # More Gemini keys (Eg: from other Google accounts), separated by commas. When one key's free daily quota is used up, the next one is used.
 gemini_backup_keys = ""
+
+# Backup AI, used automatically when the main AI can't answer (Eg: every Gemini key used up its free daily quota)
+fallback_ai = ""                    # "groq" (free key: https://console.groq.com/keys), "openrouter" (free models: https://openrouter.ai/keys) or "" for none
+fallback_api_key = ""               # Kept in Windows Credential Manager by the dashboard
+fallback_model = ""                 # "" = a good free default
 gemini_model = "gemini-3.8-flash"     # Eg: "gemini-3.8-flash" (fast, free tier). Google retired "gemini-2.5-flash" for new users
 
 

@@ -10,7 +10,15 @@ from typing import Callable
 
 from modules.helpers import print_lg
 from modules.answer_store import AnswerStore, match_option, normalize_question
-from modules.popup import ask_user
+import os
+from modules.popup import ask_user as popup_ask_user
+from modules import questions_queue
+
+
+def ask_user(*args, **kwargs):
+    '''The dashboard's Questions tab when the dashboard started the bot, else the desktop popup.'''
+    if os.environ.get("APPLY_AND_PRAY_DASHBOARD"): return questions_queue.ask(*args, **kwargs)
+    return popup_ask_user(*args, **kwargs)
 
 
 class AnswerResolver:
@@ -103,7 +111,7 @@ class AnswerResolver:
             try: self.on_popup_closed()
             except Exception: pass
         if result is None:
-            print_lg(f'No answer in {self.popup_timeout_minutes:g} min (popup_timeout_minutes), skipped: "{question}"' if timed_out else f'You skipped: "{question}"')
+            print_lg(f'No answer in {self.popup_timeout_minutes:g} min (popup_timeout_minutes), skipped: "{question}"' + (" (it stays in the dashboard\'s Questions tab: answer it there for next time)" if os.environ.get("APPLY_AND_PRAY_DASHBOARD") else "") if timed_out else f'You skipped: "{question}"')
             if allow_save: self._job_answers[key] = None
             return None
         answer, save_for_all = result

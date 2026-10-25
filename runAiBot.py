@@ -371,8 +371,8 @@ def get_job_description(
                 print_lg('Found the word "master" in the description, allowing 2 more years of experience')
                 found_masters = 2
             experience_required = extract_years_of_experience(jobDescription)
-            if current_experience > -1 and experience_required > current_experience + found_masters:
-                skipMessage = f'\n{jobDescription}\n\nExperience required {experience_required} > Current Experience {current_experience + found_masters}. Skipping this job!\n'
+            if current_experience > -1 and experience_required > current_experience + found_masters + experience_tolerance:
+                skipMessage = f'\n{jobDescription}\n\nExperience required {experience_required} > Current Experience {current_experience + found_masters} (+{experience_tolerance} allowed). Skipping this job!\n'
                 skipReason = "Required experience is high"
                 skip = True
     except Exception as e:
@@ -382,6 +382,25 @@ def get_job_description(
             print_lg("Unable to extract years of experience required!")
             # print_lg(e)
     return jobDescription, experience_required, skip, skipReason, skipMessage
+
+
+def _file_hash(path: str) -> str:
+    import hashlib
+    with open(path, "rb") as file: return hashlib.sha256(file.read()).hexdigest()
+
+
+def resume_already_uploaded(path: str) -> bool:
+    '''True when this exact resume file was uploaded to LinkedIn by an earlier run.'''
+    from modules.user_settings import load_section
+    try: return load_section("status").get("resume_uploaded_hash") == _file_hash(path)
+    except Exception: return False
+
+
+def remember_resume_upload(path: str) -> None:
+    if TEST_RUN: return
+    from modules.user_settings import save_section
+    try: save_section("status", {"resume_uploaded_hash": _file_hash(path)})
+    except Exception: pass
 
 
 # Function to upload resume
@@ -408,8 +427,14 @@ def ai_answer_any(question: str, question_type: str = "text", options: list[str]
 
 
 # "Write with AI" in the popup: your short notes -> a complete answer. Raises with the reason when AI can't write it.
+def secrets_fallback_name() -> str:
+    from config import secrets
+    return getattr(secrets, "fallback_ai", "")
+
+
 def ai_write_from_notes(question: str, notes: str, question_type: str = "textarea", company: str = "", job_title: str = "", job_description: str | None = None) -> str:
-    if not (use_AI and aiClient): raise RuntimeError("AI is off. Set use_AI = True and add your API key in config/secrets.py")
+    from modules.ai import fallback
+    if not (use_AI and (aiClient or fallback.configured())): raise RuntimeError("AI is off. Set use_AI = True and add your API key in config/secrets.py")
     prompt = (f"{question}\n\nTHE CANDIDATE'S OWN NOTES FOR THIS ANSWER: {notes}\n"
               "Turn these notes into the candidate's complete answer to the question above, in the first person. Keep every fact from the notes, "
               "you may add matching details from the candidate information, but never invent projects, numbers, employers or results.")
@@ -420,7 +445,19 @@ def ai_write_from_notes(question: str, notes: str, question_type: str = "textare
 
 
 def ai_raw_answer(question: str, question_type: str = "text", options: list[str] | None = None, job_description: str | None = None, company: str = "", job_title: str = "") -> str | dict | None:
-    '''The provider's answer: text, {"error": ...}, or None if AI is off.'''
+    '''The provider's answer: text, {"error": ...}, or None if AI is off. The backup AI (Groq / OpenRouter) answers when the main one can't.'''
+    from modules.ai import fallback
+    information = ai_profile_text or real_text(user_information_all, "User Information")
+    about_job = " - ".join(part for part in (company, job_title) if part) or None
+    main = ai_raw_answer_main(question, question_type, options, job_description, company, job_title) if (use_AI and aiClient) else None
+    if (main is None or isinstance(main, dict)) and use_AI and fallback.configured():
+        backup = fallback.answer_question(question, question_type, options, job_description, about_job, information)
+        if backup: return backup
+    return main
+
+
+def ai_raw_answer_main(question: str, question_type: str = "text", options: list[str] | None = None, job_description: str | None = None, company: str = "", job_title: str = "") -> str | dict | None:
+    '''The main AI provider's answer (Gemini / OpenAI / DeepSeek).'''
     if not (use_AI and aiClient): return None
     provider = ai_provider.lower()
     information = ai_profile_text or real_text(user_information_all, "User Information")
@@ -1768,7 +1805,9 @@ def handle_job(listing_id: str, state: RunState, page_url: str) -> str:
 
     # 4. Save
     submitted_jobs(job_id, title, company, work_location, work_style, description, experience_required, skills, hr_name, hr_link, resume, reposted, date_listed, date_applied, job_link, application_link, questions_list, connect_request="In Development")
-    if uploaded: useNewResume = False
+    if uploaded:
+        useNewResume = False
+        remember_resume_upload(default_resume_path)
     state.applied_ids.add(job_id)
     if application_link == "Easy Applied": easy_applied_count += 1
     elif normal_applied: normal_applied_count += 1
@@ -1865,7 +1904,8 @@ def go_through_search(search: str, state: RunState) -> None:
 def apply_to_jobs(search_terms: list[str]) -> None:
     '''One round: one position per search (random order), with a fresh job history.'''
     global job_history
-    job_history = JobHistory(file_name, failed_file_name, avoid_same_company_days, retry_failed_jobs, max_applications_per_company)
+    job_history = JobHistory(file_name, failed_file_name, avoid_same_company_days, retry_failed_jobs, max_applications_per_company,
+                             experience_limit=current_experience + experience_tolerance if current_experience > -1 else None)
     state = RunState()
     searches = plan_searches(search_terms, randomize_search_order)
     print_lg(f"Positions for this run, in this order: {searches}")
@@ -1956,7 +1996,7 @@ def run_feed_jobs() -> None:
     print_lg(f"Feed jobs: searching posts for {terms}")
     feed = FeedJobs(driver, control=control, normal_applier=normal_applier,
                     resume_path=default_resume_path if os.path.exists(default_resume_path) else None,
-                    ai_write=ai_write_text if (use_AI and aiClient) else None, experience_of=extract_years_of_experience, save_page=save_page_for_fixing)
+                    ai_write=ai_write_text if use_AI else None, experience_of=extract_years_of_experience, save_page=save_page_for_fixing)
     feed_counts = feed.run(terms)
 
 
@@ -2002,6 +2042,9 @@ def main() -> None:
         # Find the resume even if the path is relative to the parent folder
         default_resume_path = resolve_resume_path(default_resume_path) or default_resume_path
         
+        if os.path.exists(default_resume_path) and resume_already_uploaded(default_resume_path):
+            useNewResume = False   # LinkedIn already has this exact file (it keeps every upload): use it, don't add another copy
+            print_lg("Your resume hasn't changed since the last upload: LinkedIn's copy is used.")
         if not os.path.exists(default_resume_path):
             pyautogui.alert(text='Your default resume "{}" is missing! Please update it\'s folder path "default_resume_path" in config.py\n\nOR\n\nAdd a resume with exact name and path (check for spelling mistakes including cases).\n\n\nFor now the bot will continue using your previous upload from LinkedIn!'.format(default_resume_path), title="Missing Resume", button="OK")
             useNewResume = False
@@ -2032,9 +2075,11 @@ def main() -> None:
                 aiClient = deepseek_create_client()
             elif ai_provider == "gemini":
                 aiClient = gemini_create_client()
-            if aiClient:
+            from modules.ai import fallback
+            if aiClient or fallback.configured():   # The backup AI alone can answer too (Eg: Gemini's quota is used up already)
                 answer_resolver.ai_answer = ai_answer_any
                 answer_resolver.ai_writer = ai_write_from_notes
+                if fallback.configured(): print_lg(f"Backup AI ready: {secrets_fallback_name()}.")
 
             try:
                 about_company_for_ai = " ".join([word for word in (first_name+" "+last_name).split() if len(word) > 3])

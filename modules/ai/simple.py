@@ -32,6 +32,13 @@ def _setup():
 
 
 def write(prompt: str, max_tokens: int = 400) -> str | None:
+    text = _write_main(prompt, max_tokens)
+    if text: return text
+    from modules.ai import fallback   # Gemini quota used up / AI not set: the backup AI (Groq / OpenRouter)
+    return fallback.complete(prompt, max_tokens) if fallback.configured() else None
+
+
+def _write_main(prompt: str, max_tokens: int = 400) -> str | None:
     client = _setup()
     if client is None: return None
     try:

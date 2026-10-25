@@ -21,7 +21,7 @@ KEYRING_SERVICE = "Apply-and-Pray"
 
 # Settings that are passwords / keys: never written to settings.json
 SECRET_NAMES = {
-    "secrets": ["password", "llm_api_key", "gemini_api_key", "gemini_backup_keys"],
+    "secrets": ["password", "llm_api_key", "gemini_api_key", "gemini_backup_keys", "fallback_api_key"],
     "portal_login": ["portal_password"],
     "gmail": ["gmail_app_password"],
 }

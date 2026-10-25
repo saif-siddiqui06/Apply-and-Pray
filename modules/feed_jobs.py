@@ -366,7 +366,8 @@ class FeedJobs:
         self.counts["posts"] += 1
         post["links"] = list(dict.fromkeys(resolve_link(link) for link in post.get("links", [])[:8]))
         decision = read_post(post.get("text", ""), post["links"], term, current_experience=self.search.current_experience, experience_of=self.experience_of,
-                             bad_words=self.search.bad_words, skip_title_words=self.search.skip_title_words, extra_years=2 if self.search.did_masters else 0)
+                             bad_words=self.search.bad_words, skip_title_words=self.search.skip_title_words,
+                             extra_years=(2 if self.search.did_masters else 0) + int(getattr(self.search, "experience_tolerance", 0) or 0))
         post["emails"] = decision["emails"]
         role, kind = decision["role"], decision["kind"]
         author = post.get("author") or "the poster"

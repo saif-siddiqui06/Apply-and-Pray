@@ -5,6 +5,7 @@ Apply & Pray: one entry point for every part of the app. The Windows app (ApplyA
     python apply_and_pray.py bot                the bot (the mode comes from APPLY_AND_PRAY_MODE, set by the dashboard)
     python apply_and_pray.py check-linkedin     setup check: LinkedIn login
     python apply_and_pray.py check-ai           setup check: AI key
+    python apply_and_pray.py check-linkedin-pages   read-only check of every LinkedIn page the bot uses
     python apply_and_pray.py draft              prepare connection requests and messages
     python apply_and_pray.py control-panel <state file> <status file>
 
@@ -26,9 +27,9 @@ def main(arguments: list[str]) -> None:
         app.main()
     elif task == "bot":
         runpy.run_module("runAiBot", run_name="__main__")
-    elif task in ("check-linkedin", "check-ai"):
+    elif task in ("check-linkedin", "check-ai", "check-linkedin-pages"):
         from modules import checks
-        result = checks.linkedin() if task == "check-linkedin" else checks.ai()
+        result = {"check-linkedin": checks.linkedin, "check-ai": checks.ai, "check-linkedin-pages": checks.linkedin_pages}[task]()
         print(json.dumps(result), flush=True)
     elif task == "draft":
         from modules.connections import draft_invites

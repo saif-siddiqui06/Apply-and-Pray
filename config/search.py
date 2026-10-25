@@ -107,6 +107,9 @@ did_masters = False                # True or False, Note: True or False are case
 
 # Avoid applying to jobs if their required experience is above your current_experience. (Set value as -1 if you want to apply to all ignoring their required experience...)
 current_experience = 0             # Integers > -2 (Ex: -1, 0, 1, 2, 3, 4...)
+
+# Still apply when a job asks for up to this many years MORE than you have ("1 year preferred" often accepts freshers)
+experience_tolerance = 1           # Only numbers 0 or more... Don't put in quotes
 ##
 
 

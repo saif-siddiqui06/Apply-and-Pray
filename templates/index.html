@@ -14,12 +14,14 @@
     <nav class="tabs" role="tablist">
       <button class="tab active" data-tab="setup" role="tab">Setup</button>
       <button class="tab" data-tab="run" role="tab">Run</button>
+      <button class="tab" data-tab="questions" role="tab">Questions <span class="tab-badge hidden" id="questions-badge"></span></button>
       <button class="tab" data-tab="review" role="tab">Review <span class="tab-badge hidden" id="review-badge"></span></button>
       <button class="tab" data-tab="people" role="tab">People</button>
       <button class="tab" data-tab="applications" role="tab">Applications</button>
     </nav>
   </header>
 
+  <div class="update-banner hidden" id="update-banner"></div>
   <main>
     <!-- SETUP -->
     <section id="tab-setup" class="page">
@@ -47,11 +49,14 @@
         <div class="modes" id="modes"></div>
         <label class="checkbox" style="margin-bottom:14px"><input type="checkbox" id="test-run">
           <span><b>Test run</b>: fill the forms but never press the final Submit (nothing is sent). Good for trying the bot first.</span></label>
-        <div class="row gap">
+        <div class="row gap wrap">
           <button class="btn primary" id="start-btn">Start</button>
+          <button class="btn" id="check-pages-btn" title="Read-only: opens LinkedIn and checks every kind of page the bot uses">Check LinkedIn</button>
           <span class="error" id="run-error"></span>
         </div>
+        <div id="check-pages-result"></div>
       </div>
+      <div class="card asking hidden" id="asking-card"></div>
       <div class="card hidden" id="running-card">
         <div class="row between">
           <div>
@@ -68,6 +73,16 @@
         <pre class="log" id="run-log"></pre>
       </div>
       <div class="tiles" id="run-stats"></div>
+    </section>
+
+    <!-- QUESTIONS -->
+    <section id="tab-questions" class="page hidden">
+      <div class="card">
+        <h1>Questions</h1>
+        <p class="muted">Questions the bot couldn't answer from your details, saved answers or the AI. While it runs it waits a little for you here;
+          answers you save are used for this and every future application. Unanswered ones stay here for later.</p>
+      </div>
+      <div id="questions"></div>
     </section>
 
     <!-- REVIEW -->
@@ -162,7 +177,7 @@
   <footer class="app-footer">
     🙏 Apply &amp; Pray · Maintained by <a href="https://github.com/saif-siddiqui06" target="_blank" rel="noopener">Saif Siddiqui</a> ·
     <a href="https://github.com/saif-siddiqui06/Apply-and-Pray" target="_blank" rel="noopener">Project &amp; help</a> ·
-    <a href="https://github.com/saif-siddiqui06/Apply-and-Pray/blob/main/CREDITS.md" target="_blank" rel="noopener">Credits</a> · AGPL-3.0
+    <a href="https://github.com/saif-siddiqui06/Apply-and-Pray/blob/main/CREDITS.md" target="_blank" rel="noopener">Credits</a> · AGPL-3.0 · <span id="app-version"></span>
   </footer>
 
   <div class="toast hidden" id="toast"></div>

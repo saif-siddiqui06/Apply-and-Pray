@@ -41,6 +41,7 @@ function showTab(name) {
   if (name === "applications") loadApplications();
   if (name === "review") loadReview();
   if (name === "people") loadPeople();
+  if (name === "questions") loadQuestions();
 }
 $$(".tab").forEach((tab) => tab.addEventListener("click", () => showTab(tab.dataset.tab)));
 
@@ -313,6 +314,54 @@ function renderRun(state) {
     if (atBottom) log.scrollTop = log.scrollHeight;
   }
   renderTiles("#run-stats", state.stats);
+  setQuestionsBadge(state.stats && state.stats.questions);
+  const asking = $("#asking-card");
+  if (state.running && state.stats && state.stats.questions) {
+    asking.innerHTML = `<b>The bot is asking you something.</b> <a href="#" id="go-questions">Answer it in Questions</a> (it waits a little, then moves on: answers you save are used next time).`;
+    asking.classList.remove("hidden");
+    $("#go-questions").addEventListener("click", (e) => { e.preventDefault(); showTab("questions"); });
+  } else asking.classList.add("hidden");
+}
+
+function setQuestionsBadge(count) {
+  const badge = $("#questions-badge");
+  badge.textContent = count || "";
+  badge.classList.toggle("hidden", !count);
+}
+
+let questionsTimer = null;
+async function loadQuestions() {
+  const data = await api("/api/questions");
+  setQuestionsBadge(data.questions.length);
+  const box = $("#questions");
+  // Don't redraw while you're typing an answer
+  if (box.contains(document.activeElement) && document.activeElement.matches("input, textarea, select")) return;
+  box.innerHTML = data.questions.length ? "" : `<div class="card muted">No questions waiting. 🎉</div>`;
+  data.questions.forEach((q) => {
+    const card = document.createElement("div");
+    card.className = "draft question-card";
+    const input = q.options && q.options.length
+      ? `<select class="answer"><option value="">Choose…</option>${q.options.map((o) => `<option>${esc(o)}</option>`).join("")}</select>`
+      : (q.qtype === "textarea" ? `<textarea class="answer" placeholder="Your answer"></textarea>` : `<input type="text" class="answer" placeholder="Your answer">`);
+    card.innerHTML = `
+      <div class="q">${esc(q.question)}</div>
+      <div class="muted" style="font-size:13px;margin-bottom:8px">${esc([q.job_title, q.company].filter(Boolean).join(" @ "))} · ${esc((q.created_at || "").slice(0, 16))}</div>
+      ${q.hint ? `<div class="muted" style="font-size:13px;margin-bottom:8px">${esc(q.hint)}</div>` : ""}
+      ${input}
+      ${q.can_save ? `<label class="checkbox" style="margin-top:8px"><input type="checkbox" class="save-all" checked> Save for all jobs (used automatically next time)</label>` : `<div class="muted" style="font-size:13px;margin-top:6px">One-time answer (not saved)</div>`}
+      <div class="step-actions"></div>`;
+    const actions = $(".step-actions", card);
+    actions.append(button("Answer", "primary", async () => {
+      const answer = $(".answer", card).value.trim();
+      if (!answer) { toast("Type or choose an answer first."); return; }
+      try {
+        const r = await api(`/api/questions/${q.id}`, { json: { answer, save_for_all: $(".save-all", card) ? $(".save-all", card).checked : false } });
+        toast(r.detail); card.remove(); loadQuestions();
+      } catch (e) { toast((e.data && e.data.detail) || e.message); }
+    }), button("Skip", "", async () => { await api(`/api/questions/${q.id}`, { json: { action: "skip" } }); card.remove(); loadQuestions(); }));
+    box.appendChild(card);
+  });
+  if (currentTab === "questions" && !questionsTimer) questionsTimer = setInterval(() => currentTab === "questions" ? loadQuestions() : (clearInterval(questionsTimer), questionsTimer = null), 3000);
 }
 
 let runTimer = null;
@@ -573,8 +622,39 @@ async function reviewAction(id, action, box) {
   }
 }
 
+// ---------- Check LinkedIn ----------
+$("#check-pages-btn").addEventListener("click", async (e) => {
+  const b = e.target, out = $("#check-pages-result");
+  try { await api("/api/check/pages", { json: {} }); } catch (err) { toast(err.message); return; }
+  b.disabled = true;
+  out.innerHTML = `<div class="result wait">Checking LinkedIn (about 1-2 minutes, a Chrome window opens; nothing is clicked or sent)…</div>`;
+  const timer = setInterval(async () => {
+    const state = await api("/api/check/pages");
+    if (state.running) return;
+    clearInterval(timer); b.disabled = false;
+    const r = state.result || {ok: false, detail: "No result", parts: []};
+    out.innerHTML = `<div class="result ${r.ok ? "ok" : "bad"}">${r.ok ? "✓" : "✗"} ${esc(r.detail)}</div>` +
+      (r.parts || []).map((p) => `<div class="muted" style="font-size:14px;margin-top:4px">${p.ok ? "✓" : "✗"} <b>${esc(p.name)}</b>: ${esc(p.detail)}</div>`).join("") +
+      (r.ok ? "" : `<div class="muted" style="font-size:13px;margin-top:6px">LinkedIn changed its pages: check for an app update (or report it on the project page).</div>`);
+  }, 3000);
+});
+
+// ---------- Update notice ----------
+async function checkVersion() {
+  try {
+    const v = await api("/api/version");
+    $("#app-version") && ($("#app-version").textContent = `v${v.current}`);
+    if (v.newer) {
+      const banner = $("#update-banner");
+      banner.innerHTML = `Version ${esc(v.latest)} of Apply &amp; Pray is available (you have ${esc(v.current)}). ${link(v.url, "Download it")}`;
+      banner.classList.remove("hidden");
+    }
+  } catch (e) { /* offline: no banner */ }
+}
+
 // ---------- Start ----------
 let firstTab = "setup";
 try { firstTab = localStorage.getItem("tab") || "setup"; } catch (e) { /* fine */ }
-showTab(["setup", "run", "review", "people", "applications"].includes(firstTab) ? firstTab : "setup");
+showTab(["setup", "run", "questions", "review", "people", "applications"].includes(firstTab) ? firstTab : "setup");
 refreshRun();
+checkVersion();

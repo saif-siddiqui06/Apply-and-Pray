@@ -3,7 +3,7 @@
 ; User data is NOT in the install folder (it's in %LOCALAPPDATA%\ApplyAndPray), so uninstalling or updating keeps it.
 
 #define AppName "Apply & Pray"
-#define AppVersion "2.0.1"
+#define AppVersion "2.1.0"
 #define AppExe "ApplyAndPray.exe"
 
 [Setup]

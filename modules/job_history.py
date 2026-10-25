@@ -78,7 +78,9 @@ def _parse_date(text: str) -> datetime | None:
 
 
 class JobHistory:
-    def __init__(self, applied_file: str, failed_file: str, avoid_same_company_days: int = 30, retry_failed_jobs: bool = False, max_per_company: int = 1):
+    def __init__(self, applied_file: str, failed_file: str, avoid_same_company_days: int = 30, retry_failed_jobs: bool = False, max_per_company: int = 1,
+                 experience_limit: int | None = None):
+        '''`experience_limit`: the most years you apply for now. Jobs skipped earlier for asking more, but not more than this, are tried again.'''
         self.avoid_same_company_days = avoid_same_company_days
         self.retry_failed_jobs = retry_failed_jobs
         self.max_per_company = max(1, max_per_company)
@@ -92,8 +94,17 @@ class JobHistory:
         self.applied_today = 0                                  # Real applications sent today, for `max_applications_per_day`
         for row in _read_rows(applied_file):
             self._add_applied(row.get("Job ID", ""), row.get("Company", ""), row.get("Title", ""), _parse_date(row.get("Date Applied", "")))
+        reopened = 0
         for row in _read_rows(failed_file):
-            if row.get("Job ID"): self.record_failed(row["Job ID"], row.get("Assumed Reason", ""))
+            if not row.get("Job ID"): continue
+            reason = row.get("Assumed Reason", "")
+            if experience_limit is not None and reason.startswith("Required experience is high"):
+                asked = re.search(r'Experience required (\d+) >', row.get("Stack Trace", "") or "")
+                if asked and int(asked.group(1)) <= experience_limit:   # Fits your experience tolerance now: try it again
+                    reopened += 1
+                    continue
+            self.record_failed(row["Job ID"], reason)
+        if reopened: print_lg(f"{reopened} jobs skipped earlier for experience fit your experience tolerance now: they'll be tried again.")
         retry = len([job for job, count in self.error_count.items() if count < MAX_ERROR_TRIES and job not in self.not_for_you])
         print_lg(f"Job history: {len(self.applied_ids)} applied or saved, {len(self.not_for_you)} not for you, {retry} failed because of an error (will be tried again).")
 

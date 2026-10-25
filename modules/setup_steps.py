@@ -39,7 +39,9 @@ STEPS = [
             {"section": "search", "name": "experience_level", "label": "Experience levels", "type": "multiselect",
              "options": ["Internship", "Entry level", "Associate", "Mid-Senior level", "Director", "Executive"]},
             {"section": "search", "name": "current_experience", "label": "Your years of experience", "type": "number", "required": True,
-             "help": "Jobs asking for more than this are skipped. 0 if you're a fresher."},
+             "help": "0 if you're a fresher."},
+            {"section": "search", "name": "experience_tolerance", "label": "Also apply when a job asks for up to ... more years", "type": "number",
+             "help": "1 = a fresher also applies to \"0-1 year\" jobs. Jobs asking for more are skipped."},
         ],
     },
     {
@@ -74,13 +76,19 @@ and top up your balance. Model: <code>deepseek-chat</code>.</p>
 <p><b>Your own computer (free, advanced)</b>: run <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> or
 <a href="https://lmstudio.ai" target="_blank" rel="noopener">LM Studio</a>, choose “Local model”, address <code>http://localhost:11434/v1/</code> (Ollama)
 or <code>http://localhost:1234/v1/</code> (LM Studio).</p>
-<p>Your key is kept in Windows Credential Manager on this computer, never in a file.</p>""",
+<p><b>Backup AI (recommended, free)</b>: used automatically when your main AI can't answer. <b>Groq</b>: sign in at
+<a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> → <b>Create API Key</b> → copy it.
+<b>OpenRouter</b>: <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a> → <b>Create Key</b> (its ":free" models cost nothing).</p>
+<p>Your keys are kept in Windows Credential Manager on this computer, never in a file.</p>""",
         "fields": [
             {"section": "secrets", "name": "ai_provider", "label": "AI provider", "type": "select", "required": True,
              "options": [["gemini", "Google Gemini (free)"], ["openai", "OpenAI"], ["deepseek", "DeepSeek"], ["local", "Local model (Ollama / LM Studio)"]]},
             {"section": "secrets", "name": "gemini_api_key", "label": "Gemini API key", "type": "password", "required": True, "show_if": ["ai_provider", ["gemini"]]},
             {"section": "secrets", "name": "gemini_backup_keys", "label": "Backup Gemini keys (optional)", "type": "password", "show_if": ["ai_provider", ["gemini"]],
              "help": "More keys, Eg: made with other Google accounts, separated by commas. When one key's free daily limit is used up, the bot switches to the next."},
+            {"section": "secrets", "name": "fallback_ai", "label": "Backup AI (free, used when the main AI runs out)", "type": "select",
+             "options": [["", "None"], ["groq", "Groq (free)"], ["openrouter", "OpenRouter (free models)"]]},
+            {"section": "secrets", "name": "fallback_api_key", "label": "Backup AI key", "type": "password", "show_if": ["fallback_ai", ["groq", "openrouter"]]},
             {"section": "secrets", "name": "gemini_model", "label": "Gemini model", "type": "text", "placeholder": "gemini-3.8-flash", "show_if": ["ai_provider", ["gemini"]],
              "help": "Leave as it is unless you know you need another one."},
             {"section": "secrets", "name": "llm_api_key", "label": "API key", "type": "password", "required": True, "show_if": ["ai_provider", ["openai", "deepseek"]]},
@@ -118,6 +126,8 @@ or <code>http://localhost:1234/v1/</code> (LM Studio).</p>
              "help": "Many Indian job forms ask these. Leave empty to let the AI / a popup handle them."},
             {"section": "questions", "name": "linkedin_headline", "label": "Headline", "type": "text", "placeholder": "Final-year CSE student | Python, SQL, ML"},
             {"section": "questions", "name": "linkedin_summary", "label": "Short summary about you", "type": "textarea"},
+            {"section": "settings", "name": "max_applications_per_day", "label": "Most applications per day", "type": "number",
+             "help": "LinkedIn restricts accounts that apply too much. 30 is a safe default; 0 = no limit (not recommended)."},
             {"section": "portal_login", "name": "portal_email", "label": "Email for job-site accounts", "type": "email", "help": "Empty = your application email."},
             {"section": "portal_login", "name": "portal_password", "label": "Password for job-site accounts", "type": "password"},
         ],

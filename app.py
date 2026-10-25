@@ -112,6 +112,10 @@ def _run_script(task: str, timeout: int) -> dict:
 
 
 def _check_worker(step_id: str) -> None:
+    if step_id == "pages":   # "Check LinkedIn": not a setup step, just shown
+        result = _run_script("check-linkedin-pages", 360)
+        with _checks_lock: _checks[step_id] = {"running": False, "result": result}
+        return
     if step_id == "linkedin": result = _run_script("check-linkedin", 360)
     elif step_id == "ai": result = _run_script("check-ai", 120)
     else: result = gmail.check()
@@ -121,8 +125,8 @@ def _check_worker(step_id: str) -> None:
 
 @app.post("/api/check/<step_id>")
 def start_check(step_id):
-    if step_id not in ("linkedin", "ai", "gmail"): abort(404)
-    if step_id == "linkedin" and _bot_running(): return jsonify({"error": "Stop the bot first: it's using the LinkedIn window."}), 409
+    if step_id not in ("linkedin", "ai", "gmail", "pages"): abort(404)
+    if step_id in ("linkedin", "pages") and _bot_running(): return jsonify({"error": "Stop the bot first: it's using the LinkedIn window."}), 409
     with _checks_lock:
         if _checks.get(step_id, {}).get("running"): return jsonify({"running": True})
         _checks[step_id] = {"running": True, "result": None}
@@ -342,6 +346,38 @@ def list_people():
     counts = {}
     for person in everyone: counts[person["status"]] = counts.get(person["status"], 0) + 1
     return jsonify({"people": everyone, "counts": counts})
+
+
+@app.get("/api/questions")
+def list_questions():
+    return jsonify({"questions": db.questions_pending(), "bot_running": _bot_running()})
+
+
+@app.post("/api/questions/<int:item_id>")
+def answer_question(item_id):
+    data = request.get_json(force=True) or {}
+    item = db.question_get(item_id)
+    if not item: abort(404)
+    if data.get("action") == "skip":
+        db.question_skip(item_id)
+        return jsonify({"ok": True, "detail": "Skipped."})
+    answer = str(data.get("answer", "")).strip()
+    if not answer: return jsonify({"ok": False, "detail": "Type an answer first."}), 400
+    save_for_all = bool(data.get("save_for_all", True)) and bool(item["can_save"])
+    db.question_answer(item_id, answer, save_for_all)
+    if save_for_all:   # Saved now as well, so the next run uses it even if the bot already moved on
+        import json as _json
+        from config.settings import saved_answers_file
+        from modules.answer_store import AnswerStore
+        options = _json.loads(item["options"] or "[]")
+        AnswerStore(saved_answers_file).save(item["question"], answer, item["qtype"] or "text", options or None)
+    return jsonify({"ok": True, "detail": "Saved: used for this and future applications." if save_for_all else "Sent to the bot."})
+
+
+@app.get("/api/version")
+def version_info():
+    from modules.version import latest_release
+    return jsonify(latest_release())
 
 
 @app.get("/api/export/<table>.csv")

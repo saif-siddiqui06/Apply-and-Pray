@@ -101,6 +101,20 @@ _MIGRATIONS = [
         done_at TEXT NOT NULL
     );
     ''',
+    # 5: Questions asked in the dashboard instead of a popup
+    '''
+    CREATE TABLE questions (
+        id INTEGER PRIMARY KEY,
+        qkey TEXT NOT NULL,                -- the question, normalized (one open entry per question)
+        question TEXT NOT NULL, qtype TEXT, options TEXT,   -- options: JSON list
+        company TEXT, job_title TEXT, hint TEXT,
+        can_save INTEGER DEFAULT 1,        -- 0 for one-time codes (verification codes)
+        status TEXT NOT NULL,              -- pending, answered (waiting for the bot), used, skipped
+        answer TEXT, save_for_all INTEGER DEFAULT 1,
+        created_at TEXT NOT NULL, answered_at TEXT
+    );
+    CREATE INDEX questions_status ON questions (status);
+    ''',
 ]
 
 
@@ -256,6 +270,7 @@ def stats() -> dict:
             "failed_today": one("SELECT COUNT(*) FROM failures WHERE tried_at LIKE ?", today + "%"),
             "feed": one("SELECT COUNT(*) FROM applications WHERE status = 'applied' AND method IN ('feed', 'email')"),
             "to_review": one("SELECT COUNT(*) FROM outbox WHERE status = 'draft'"),
+            "questions": one("SELECT COUNT(*) FROM questions WHERE status = 'pending'"),
         }
 
 
@@ -382,6 +397,50 @@ def invites_sent_since(since: str, with_note: bool | None = None) -> int:
     if with_note is True: sql += " AND body != ''"
     if with_note is False: sql += " AND body = ''"
     with session() as connection: return connection.execute(sql, (since,)).fetchone()[0]
+#>
+
+
+#< Questions for the dashboard (also during a test run: they don't change any job record)
+def question_ask(question: str, qtype: str, options: list | None, company: str, job_title: str, can_save: bool, hint: str = "") -> int:
+    import json
+    from modules.answer_store import normalize_question
+    key = normalize_question(question) + ("|" + "|".join(options) if options else "")
+    with session() as connection:
+        row = connection.execute("SELECT id FROM questions WHERE qkey = ? AND status = 'pending'", (key,)).fetchone()
+        if row:
+            connection.execute("UPDATE questions SET company = ?, job_title = ?, created_at = ? WHERE id = ?", (company, job_title, _now(), row[0]))
+            return row[0]
+        return connection.execute("""INSERT INTO questions (qkey, question, qtype, options, company, job_title, hint, can_save, status, created_at)
+                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)""",
+                                  (key, question, qtype, json.dumps(options or []), company, job_title, hint, 1 if can_save else 0, _now())).lastrowid
+
+
+def question_get(item_id: int) -> dict | None:
+    with session() as connection:
+        row = connection.execute("SELECT * FROM questions WHERE id = ?", (item_id,)).fetchone()
+        return dict(row) if row else None
+
+
+def questions_pending() -> list[dict]:
+    import json
+    with session() as connection:
+        rows = [dict(row) for row in connection.execute("SELECT * FROM questions WHERE status = 'pending' ORDER BY created_at DESC")]
+    for row in rows: row["options"] = json.loads(row["options"] or "[]")
+    return rows
+
+
+def question_answer(item_id: int, answer: str, save_for_all: bool) -> None:
+    with session() as connection:
+        connection.execute("UPDATE questions SET status = 'answered', answer = ?, save_for_all = ?, answered_at = ? WHERE id = ?",
+                           (answer, 1 if save_for_all else 0, _now(), item_id))
+
+
+def question_skip(item_id: int) -> None:
+    with session() as connection: connection.execute("UPDATE questions SET status = 'skipped', answered_at = ? WHERE id = ?", (_now(), item_id))
+
+
+def question_mark_used(item_id: int) -> None:
+    with session() as connection: connection.execute("UPDATE questions SET status = 'used' WHERE id = ?", (item_id,))
 #>
 
 

@@ -147,5 +147,9 @@ tr.your-turn td { background: var(--ok-bg); }
 .draft textarea.note { min-height: 90px; }
 .action-tag.bad { background: var(--danger-bg); color: var(--danger); }
 
+.update-banner { background: var(--accent); color: var(--accent-text); text-align: center; padding: 8px 16px; font-size: 14px; font-weight: 600; }
+.update-banner a { color: inherit; text-decoration: underline; }
+.asking { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.question-card .q { font-weight: 600; margin-bottom: 4px; }
 .app-footer { max-width: 1040px; margin: 8px auto 32px; padding: 0 24px; font-size: 13px; color: var(--muted); text-align: center; }
 .app-footer a { color: var(--muted); }

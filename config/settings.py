@@ -101,21 +101,21 @@ Every delay is (min, max) in SECONDS: the bot waits a random time between the tw
 If LinkedIn shows "We noticed you're applying at a fast pace ... we've briefly paused Easy Apply", the bot stops Easy Apply by itself
 (see README). Before the next run, make `delay_after_application` bigger and lower `max_applications_per_hour` / `max_applications_per_day`.
 '''
-delay_after_application    = (1, 2)  # After each application is sent (Easy Apply or company website)
-delay_after_skipped_job    = (1, 2)     # After a job was opened and then skipped or failed (experience too high, form problem...)
-delay_before_opening_job   = (1, 2)     # Before clicking the next job in the list, like a person reading the list
-delay_between_form_pages   = (1, 2)     # Before clicking Next / Review on each Easy Apply page
-delay_before_submit        = (1, 2)     # Before clicking Submit (Easy Apply and company websites)
-delay_between_result_pages = (1, 2)    # Before loading the next page of search results
-delay_between_searches     = (1, 2)   # Before searching the next job position
+delay_after_application    = (8, 15)   # After each application is sent (Easy Apply or company website)
+delay_after_skipped_job    = (3, 6)    # After a job was opened and then skipped or failed (experience too high, form problem...)
+delay_before_opening_job   = (2, 5)    # Before clicking the next job in the list, like a person reading the list
+delay_between_form_pages   = (1, 3)    # Before clicking Next / Review on each Easy Apply page
+delay_before_submit        = (2, 5)    # Before clicking Submit (Easy Apply and company websites)
+delay_between_result_pages = (3, 6)    # Before loading the next page of search results
+delay_between_searches     = (10, 20)  # Before searching the next job position
 
 # A longer break after every few applications, 0 = never.
-break_every_applications = 0          # Only numbers 0 or more... Don't put in quotes
-break_minutes = (1, 2)              # (min, max) in MINUTES
+break_every_applications = 10         # Only numbers 0 or more... Don't put in quotes
+break_minutes = (3, 6)              # (min, max) in MINUTES
 
 # Limits (Easy Apply + Normal Apply together), 0 = no limit.
-max_applications_per_hour = 0      # When reached, the bot waits until the oldest application of the last hour is 1 hour old
-max_applications_per_day = 0        # When reached, the bot stops for today
+max_applications_per_hour = 15     # When reached, the bot waits until the oldest application of the last hour is 1 hour old
+max_applications_per_day = 30       # When reached, the bot stops for today. LinkedIn restricts accounts that apply too much
 
 # Open the list of jobs to apply by hand (all excels/apply_by_hand.html) at the end of a run if new ones were saved?
 open_apply_by_hand_page = True      # True or False, Note: True or False are case-sensitive
