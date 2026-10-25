@@ -133,6 +133,11 @@ def profile_answer(field: dict, resume_path: str | None = None, job_location: st
         if re.search(r'\bmonths? of (professional |work |relevant |total )?experience\b|\badditional months\b', label): return "0"   # Experience is counted in whole years
         if re.search(r'\byears? of (professional |work |relevant |total )?experience\b|\bhow many years\b|\bexperience \(years\)|\b(total |work )?experience (in|\(in) years\b', label) \
                 or re.fullmatch(r'(total |overall |work |relevant )?(work )?experience', label): return years_of_experience
+    if re.search(r'^what is your (salary |ctc |pay )?expectations?\??$|^(salary |ctc )?expectations?\??$', label): return _salary(label, desired_salary)
+    if re.search(r'how soon can you (join|start)|when can you (join|start)|joining (time|period|date)|availability to (join|start)|days to join|time to join', label):
+        if "month" in label: return str(notice_period // 30)
+        if "week" in label: return str(notice_period // 7)
+        return str(notice_period)
     if "notice period" in label or "notice" in label and "days" in label:
         if "month" in label: return str(notice_period // 30)
         if "week" in label: return str(notice_period // 7)

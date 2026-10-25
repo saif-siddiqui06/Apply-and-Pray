@@ -204,6 +204,10 @@ def gemini_create_client() -> GeminiClient | None:
                 client = candidate
                 print_lg(f'Using Gemini model {other}. Put gemini_model = "{other}" in config/secrets.py to skip this check next time.')
                 break
+    if isinstance(answer, dict) and (answer.get("status") in (429, 500, 502, 503, 504) or any(word in str(answer.get("error", "")).lower() for word in ("high demand", "overloaded", "try again", "quota"))):
+        # Busy right now, or today's quota used up: not a broken key. Keep the client: each question tries again (then backup keys / backup AI)
+        print_lg(f"Gemini is busy or out of quota right now ({str(answer.get('error'))[:120]}); it will be tried again for each question.")
+        return client
     if isinstance(answer, dict):
         print_lg(f"Gemini is not working: {answer.get('error')}. Check `gemini_api_key` and `gemini_model` in config/secrets.py. Continuing without AI.")
         return None

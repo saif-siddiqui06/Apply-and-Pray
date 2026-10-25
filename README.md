@@ -253,8 +253,9 @@ Your browser opens `http://127.0.0.1:5000`. It runs only on your computer: nothi
 | Tab | What it does |
 |---|---|
 | **Setup** | 6 steps: your basics, LinkedIn login, AI assistant, application details, Gmail, networking. Each has a how-to guide and a check, and unlocks features as you finish it |
-| **Run** | Start the bot in a mode you've unlocked (Easy Apply, Normal Apply, both, Feed jobs, Networking), then Pause, Skip a job, Stop after this job or Quit. Shows what it's doing live. Tick **Test run** to fill every form without pressing the final Submit (nothing is sent) |
+| **Run** | Start the bot in a mode you've unlocked (Easy Apply, Normal Apply, both, Feed jobs, Networking), then Pause, Skip a job, Stop after this job or Quit. Shows what it's doing live. Tick **Test run** to fill every form without pressing the final Submit (nothing is sent). **Check LinkedIn** reads every kind of LinkedIn page the bot uses and tells you if one changed |
 | **Applications** | Everything applied to, jobs to apply by hand (with "Mark applied"), CSV export |
+| **Questions** | Questions the bot couldn't answer: answer them here (no desktop popups when the dashboard runs the bot). "Save for all jobs" = used automatically from then on |
 | **People** | Everyone the bot reaches out to: request sent → connected → messaged → replied (your turn) |
 | **Review** | Connection requests, messages and emails waiting for your approval. Edit, then **Approve and send**, or Skip. Nothing is sent without you (unless you turn review off in Setup → Gmail) |
 

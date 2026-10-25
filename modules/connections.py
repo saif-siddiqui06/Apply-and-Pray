@@ -254,7 +254,7 @@ class Connector:
 
 
     def _dialog(self):
-        return self._visible("//div[@role='dialog' or @role='alertdialog'] | //*[contains(@class,'artdeco-modal')][@role='dialog' or @aria-modal='true']")
+        return self._visible("//dialog[@open] | //div[@role='dialog' or @role='alertdialog'] | //*[contains(@class,'artdeco-modal')][@role='dialog' or @aria-modal='true']")
 
 
     def _open_connect(self) -> bool:
@@ -276,6 +276,13 @@ class Connector:
                 try: self.driver.find_element("tag name", "body").send_keys("")   # Escape: close the menu
                 except Exception: pass
                 return False
+        # LinkedIn 2026: Connect is a link to the invitation page (/preload/custom-invite/...): open it directly
+        try: href = self.driver.execute_script("const a = arguments[0].closest('a[href*=\"custom-invite\"]') || arguments[0].querySelector('a[href*=\"custom-invite\"]'); return a ? a.href : ''", connect) or ""
+        except Exception: href = ""
+        if href:
+            self.driver.get(href)
+            self._wait(4)
+            return True
         self._click(connect)
         self._wait(2)
         return True

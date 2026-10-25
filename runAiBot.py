@@ -1883,6 +1883,10 @@ def go_through_search(search: str, state: RunState) -> None:
             if result != "list-skip": new_on_page += 1
             if result == "applied" and not (control.stop_requested or daily_limit_hit() or dailyEasyApplyLimitReached): after_application()
             elif result != "list-skip": wait_for(delay_after_skipped_job)
+            if result == "applied" and os.environ.get("APPLY_AND_PRAY_STOP_AFTER", "").isdigit() and                     easy_applied_count + normal_applied_count >= int(os.environ["APPLY_AND_PRAY_STOP_AFTER"]):
+                print_lg(f">-> Stopping after {os.environ['APPLY_AND_PRAY_STOP_AFTER']} application(s) (APPLY_AND_PRAY_STOP_AFTER).")
+                control.stop_requested = True
+                return
             if result in ("applied", "saved"):
                 applied_here += 1
                 if applied_here >= switch_number:
